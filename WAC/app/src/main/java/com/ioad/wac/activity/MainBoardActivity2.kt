@@ -175,7 +175,7 @@ class MainBoardActivity2 : AppCompatActivity() {
                                     tvNowTemp.text = item.fcstValue
                                     nowTemp = item.fcstValue
                                 }
-                                else -> Log.d("TAG", "넌 누구니? ${item.category} :: " + item.fcstValue)
+                                else -> Log.d("TAG", "${item.category} :: " + item.fcstValue)
                             }
                         }
                     }
