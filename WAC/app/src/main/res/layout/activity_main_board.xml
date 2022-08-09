@@ -113,8 +113,9 @@
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_clothes"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"/>
             </LinearLayout>
 
             <LinearLayout
@@ -134,8 +135,9 @@
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_accessories"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"/>
             </LinearLayout>
         </LinearLayout>
 

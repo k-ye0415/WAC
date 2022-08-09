@@ -37,8 +37,8 @@ class IntroActivity : AppCompatActivity() {
     lateinit var database: FirebaseDatabase
     lateinit var dbReference: DatabaseReference
     lateinit var storage: FirebaseStorage
-    var auth : FirebaseAuth? = null
-    var firestore : FirebaseFirestore? = null
+    var auth: FirebaseAuth? = null
+    var firestore: FirebaseFirestore? = null
 
     val clothesImages = ClothesImages()
 
@@ -51,7 +51,6 @@ class IntroActivity : AppCompatActivity() {
         Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.INTERNET
     )
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,7 +100,7 @@ class IntroActivity : AppCompatActivity() {
 //        requestPermission()
         checkRunTimePermission()
 //        settingList()
-        insertClothesImages()
+//        insertClothesImages()
 
     } // onCreate
 
@@ -111,17 +110,70 @@ class IntroActivity : AppCompatActivity() {
 //            clothesImages.temperature,
 ////            temperature23to27
 //        )
-
-        val tempList = listOf<Int>(
-                        R.drawable.sleeveless,
-            R.drawable.tshirt,
-            R.drawable.short_pants,
-            R.drawable.skirt
+        val temperatureList: List<Array<Int>> = listOf(
+            clothesImages.temperature28,
+            clothesImages.temperature23to27,
+            clothesImages.temperature20to22,
+            clothesImages.temperature12to19,
+            clothesImages.temperature9to11,
+            clothesImages.temperature4to8,
+            clothesImages.temperature3
         )
-        firestore?.collection("ClothesImages")?.document("28")?.set(tempList)
+
+        temperatureList.forEachIndexed { listIndex, list ->
+            Log.d("TAG", "index :: " + listIndex)
+            var temperature = ""
+            when (listIndex) {
+                0 -> temperature = "28"
+                1 -> temperature = "23to27"
+                2 -> temperature = "20to22"
+                3 -> temperature = "12to19"
+                4 -> temperature = "9to11"
+                5 -> temperature = "4to8"
+                else -> temperature = "3"
+            }
+            list.forEachIndexed { index, value ->
+                val imageUri: Uri? = resourceToUri(this, value)
+                Log.e("TAG", "temperature : $temperature / " + imageUri.toString())
+                Log.e("TAG", "name : ${resources.getResourceEntryName(value)}")
+                Log.e("TAG", "index : ${index + 1}")
+//                val clothes = Clothes(imageUri)
+//                firestore?.collection(temperature)?.document((index + 1).toString())?.set(clothes)
+            }
+        }
+
+
+//        val tempList = listOf<Int>(
+//                        R.drawable.sleeveless,
+//            R.drawable.tshirt,
+//            R.drawable.short_pants,
+//            R.drawable.skirt
+//        )
+//        var clothes = Clothes(1, "what?")
+//        Log.e("TAG", auth?.currentUser?.uid.toString())
+//        firestore?.collection("ClothesImages")?.document("27")?.set(clothes)
+
+//        val clothes = Clothes(resourceToUri(this, R.drawable.sleeveless))
+//        firestore?.collection("ClothesImages")?.document("27")?.set(clothes)
+
+
+
+        // 가져올때 이거 사용하면될거같고
+//        var uri: Uri? = null
+//        firestore?.collection("ClothesImages")?.get()?.addOnSuccessListener {
+//            for (value in it) {
+//                Log.e("TAG", value["index"].toString())
+//                Log.e("TAG", value["imageUriStr"] as String)
+//                Log.e("TAG", value["imageUri"] as String)
+//                if ((value["imageUri"] as String).contains("sleeveless")) {
+//                    uri = Uri.parse(value["imageUri"] as String)
+//                }
+//            }
+//
+////            glide.load(uri).into(test_image)
+//        }
 
     }
-
 
 
     fun checkRunTimePermission() {
@@ -231,40 +283,40 @@ class IntroActivity : AppCompatActivity() {
         }
     }
 
-    fun settingList() {
-        val temperatureList: List<List<Int>> = listOf(
-            clothesImages.temperature,
-//            temperature23to27
-        )
-
-
-//        val imageUri: Uri? = resourceToUri(this, R.drawable.sleeveless)
-//        Log.e("TAG", imageUri.toString())
-
-
-        temperatureList.forEachIndexed { listIndex, list ->
-            Log.d("TAG", "index :: " + listIndex)
-            var temperature = ""
-            when (listIndex) {
-                0 -> temperature = "28"
-                else -> temperature = "23to27"
-            }
-            list.forEachIndexed { index, value ->
-                val imageUri: Uri? = resourceToUri(this, value)
-                Log.e("TAG", "temperature : $temperature / " + imageUri.toString())
-                Log.e("TAG", "name : ${resources.getResourceEntryName(value)}")
-                Log.e("TAG", "index : ${index + 1}")
-                CoroutineScope(Dispatchers.IO).launch {
-                    uploadToFirebase(
-                        imageUri!!,
-                        temperature,
-                        resources.getResourceEntryName(value),
-                        index + 1
-                    )
-                }
-            }
-        }
-    }
+//    fun settingList() {
+//        val temperatureList: List<List<Int>> = listOf(
+////            clothesImages.temperature,
+////            temperature23to27
+//        )
+//
+//
+////        val imageUri: Uri? = resourceToUri(this, R.drawable.sleeveless)
+////        Log.e("TAG", imageUri.toString())
+//
+//
+//        temperatureList.forEachIndexed { listIndex, list ->
+//            Log.d("TAG", "index :: " + listIndex)
+//            var temperature = ""
+//            when (listIndex) {
+//                0 -> temperature = "28"
+//                else -> temperature = "23to27"
+//            }
+//            list.forEachIndexed { index, value ->
+//                val imageUri: Uri? = resourceToUri(this, value)
+//                Log.e("TAG", "temperature : $temperature / " + imageUri.toString())
+//                Log.e("TAG", "name : ${resources.getResourceEntryName(value)}")
+//                Log.e("TAG", "index : ${index + 1}")
+//                CoroutineScope(Dispatchers.IO).launch {
+//                    uploadToFirebase(
+//                        imageUri!!,
+//                        temperature,
+//                        resources.getResourceEntryName(value),
+//                        index + 1
+//                    )
+//                }
+//            }
+//        }
+//    }
 
 
     suspend fun uploadToFirebase(

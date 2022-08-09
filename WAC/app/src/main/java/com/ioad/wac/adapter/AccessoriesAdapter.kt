@@ -1,8 +1,6 @@
 package com.ioad.wac.adapter
 
 import android.graphics.drawable.Drawable
-import android.net.Uri
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,38 +12,32 @@ import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
-import com.google.android.gms.tasks.OnSuccessListener
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.ListResult
 import com.ioad.wac.R
-import com.ioad.wac.model.Clothes
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import com.ioad.wac.model.Accessories
 
-class MainClothesAdapter(
-    val clothesList:ArrayList<Clothes>,
+class AccessoriesAdapter(
+    val accessoriesList:ArrayList<Accessories>,
     val inflater: LayoutInflater,
-    val glide:RequestManager
-):RecyclerView.Adapter<MainClothesAdapter.ViewHolder>() {
+    val glide: RequestManager
+) :RecyclerView.Adapter<AccessoriesAdapter.ViewHolder>() {
+
     inner class ViewHolder(itemView:View):RecyclerView.ViewHolder(itemView) {
-        val ivMainClothes:ImageView
-        val tvMainClothes:TextView
+        val ivMainAcc:ImageView
+        val tvMainAccName:TextView
         init {
-            ivMainClothes = itemView.findViewById(R.id.iv_main_clothes)
-            tvMainClothes = itemView.findViewById(R.id.tv_main_clothes)
+            ivMainAcc = itemView.findViewById(R.id.iv_main_accessories)
+            tvMainAccName = itemView.findViewById(R.id.tv_main_accessories)
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(inflater.inflate(R.layout.main_clothes_item, parent, false))
+        return ViewHolder(inflater.inflate(R.layout.main_accessories_item, parent, false))
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val clothes = clothesList.get(position)
-        clothes.imageUri.let {
-            glide.load(clothesList.get(position).imageUri)
+        val accessories = accessoriesList.get(position)
+        accessories.accessoriesUri.let {
+            glide.load(accessories.accessoriesUri)
                 .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                 .error(R.drawable.sunglasses)
                 .listener(object : RequestListener<Drawable> {
@@ -67,12 +59,12 @@ class MainClothesAdapter(
                     ): Boolean {
                         return false
                     }
-                }).centerInside().into(holder.ivMainClothes)
+                }).centerInside().into(holder.ivMainAcc)
         }
-        holder.tvMainClothes.text = clothes.imageName
+        holder.tvMainAccName.text = accessories.accessoriesName
     }
 
     override fun getItemCount(): Int {
-        return clothesList.size
+        return accessoriesList.size
     }
 }

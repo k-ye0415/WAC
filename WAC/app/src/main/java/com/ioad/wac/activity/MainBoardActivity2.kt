@@ -2,6 +2,8 @@ package com.ioad.wac.activity
 
 import android.content.ContentResolver
 import android.content.Context
+import android.location.Address
+import android.location.Geocoder
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -9,25 +11,31 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.*
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
-import com.ioad.wac.ApiObject
-import com.ioad.wac.ITEM
+import com.ioad.wac.*
 import com.ioad.wac.R
-import com.ioad.wac.WEATHER
+import com.ioad.wac.adapter.AccessoriesAdapter
 import com.ioad.wac.adapter.MainClothesAdapter
+import com.ioad.wac.model.Accessories
 import com.ioad.wac.model.Clothes
-import com.ioad.wac.model.Weather
+import jxl.Workbook
+import jxl.read.biff.BiffException
 import kotlinx.coroutines.*
-import kotlinx.coroutines.tasks.await
 import retrofit2.Call
 import retrofit2.Response
-import java.lang.Exception
+import java.io.IOException
+import java.io.InputStream
+import java.lang.IllegalArgumentException
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -39,12 +47,15 @@ class MainBoardActivity2 : AppCompatActivity() {
     lateinit var glide: RequestManager
     lateinit var database: FirebaseDatabase
     lateinit var dbReference: DatabaseReference
-    val fireStore = FirebaseFirestore.getInstance()
+    var auth: FirebaseAuth? = null
+    var firestore: FirebaseFirestore? = null
     val storage: FirebaseStorage = FirebaseStorage.getInstance()
     val storageRef = storage.reference
     val pathRef = storageRef.child("clothes")
     val listRef = pathRef.listAll()
-    var list = ArrayList<Clothes>()
+    var clotheslist = ArrayList<Clothes>()
+    var accessoriesList = ArrayList<Accessories>()
+    lateinit var clothes: Clothes
 
     lateinit var tvNowTemp: TextView
     lateinit var tvRainPercent: TextView
@@ -52,21 +63,27 @@ class MainBoardActivity2 : AppCompatActivity() {
     lateinit var ivMainBg: ImageView
     lateinit var tvNowFcstTime: TextView
 
+    private var gpsTracker: GpsTracker? = null
+
+    private val GPS_ENABLE_REQUEST_CODE = 2001
+    private val PERMISSIONS_REQUEST_CODE = 100
+
 
     private var base_date = ""  // 발표 일자
     private var base_time = ""      // 발표 시각
     private var nx = "60"               // 예보지점 X 좌표
     private var ny = "125"              // 예보지점 Y 좌표
     private var nowTemp: String = ""
-    private var nowSky:String = ""
-    private var nowRainPercent:String = ""
+    private var nowSky: String = ""
+    private var nowRainPercent: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main_board)
 
+        auth = Firebase.auth
+        firestore = FirebaseFirestore.getInstance()
 
-        val scope = GlobalScope
 
         tvNowTemp = findViewById(R.id.tv_now_temp)
         tvRainPercent = findViewById(R.id.tv_rain_percent)
@@ -82,9 +99,91 @@ class MainBoardActivity2 : AppCompatActivity() {
         rvClothes.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
         rvAccessories = findViewById(R.id.rv_accessories)
-        rvAccessories.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rvAccessories.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
+        // 위치정보 가져오기
+        getLocation()
+
+
+        // 날씨 정보 가져오기
         setWeather(nx, ny)
+    }
+
+
+    private fun getLocation() {
+        gpsTracker = GpsTracker(this)
+
+        val latitude = gpsTracker!!.latitude
+        val longitude = gpsTracker!!.longitude
+
+        val address = getCurrentAddress(latitude, longitude)
+        Log.e("TAG", address.toString())
+        val local = address.toString().split(" ")
+        Log.e("TAG", local.toString())
+        val location = local[2]
+        readExcel(location)
+
+    }
+
+    fun getCurrentAddress(latitude: Double, longitude: Double): String? {
+
+        //지오코더... GPS를 주소로 변환
+        val geocoder = Geocoder(this, Locale.getDefault())
+        val addresses: List<Address>?
+        try {
+            addresses = geocoder.getFromLocation(
+                latitude,
+                longitude,
+                7
+            )
+        } catch (ioException: IOException) {
+            //네트워크 문제
+            Toast.makeText(this, "지오코더 서비스 사용불가", Toast.LENGTH_LONG).show()
+            return "지오코더 서비스 사용불가"
+        } catch (illegalArgumentException: IllegalArgumentException) {
+            Toast.makeText(this, "잘못된 GPS 좌표", Toast.LENGTH_LONG).show()
+            return "잘못된 GPS 좌표"
+        }
+        if (addresses == null || addresses.size == 0) {
+            Toast.makeText(this, "주소 미발견", Toast.LENGTH_LONG).show()
+            return "주소 미발견"
+        }
+        val address = addresses[0]
+        return address.getAddressLine(0).toString() + "\n"
+    }
+
+    fun readExcel(localName: String?) {
+        try {
+            val inputStream: InputStream = baseContext.resources.assets.open("local_name.xls")
+            val wb: Workbook = Workbook.getWorkbook(inputStream)
+            if (wb != null) {
+                val sheet = wb.getSheet(0) // 시트 불러오기
+                if (sheet != null) {
+                    val colTotal = sheet.columns // 전체 컬럼
+                    val rowIndexStart = 1 // row 인덱스 시작
+                    val rowTotal = sheet.getColumn(colTotal - 1).size
+                    var row = rowIndexStart
+                    while (row < rowTotal) {
+                        val contents = sheet.getCell(0, row).contents
+                        if (contents.contains(localName!!)) {
+                            nx = sheet.getCell(1, row).contents
+                            ny = sheet.getCell(2, row).contents
+                            row = rowTotal
+                        }
+                        row++
+                    }
+                }
+            }
+        } catch (e: IOException) {
+            Log.i("READ_EXCEL1", e.message!!)
+            e.printStackTrace()
+        } catch (e: BiffException) {
+            Log.i("READ_EXCEL1", e.message!!)
+            e.printStackTrace()
+        }
+        // x, y = String형 전역변수
+        Log.i("격자값", "x = " + nx + "  y = " + ny)
     }
 
 
@@ -94,37 +193,37 @@ class MainBoardActivity2 : AppCompatActivity() {
         when (tempInt) {
             in 28..1000 -> temp = "28"
             in 23..27 -> temp = "23to27"
+            in 20..22 -> temp = "20to22"
+            in 12..19 -> temp = "12to19"
+            in 9..11 -> temp = "9to11"
+            in 4..8 -> temp = "4to8"
+            in -50..3 -> temp = "3"
             else -> temp = "error"
         }
-
-        dbReference.child(temp).addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val value = snapshot.children
-                var uri:Uri? = null
-                value.forEachIndexed { position, data ->
-                    val data = data.children
-                    data.forEach { it ->
-                        uri = Uri.parse(it.value.toString())
-                    }
-                    val clothes = Clothes(uri)
-                    list.add(position, clothes)
-                }
-                Log.d("TAG", "list size :: " + list.size)
-                list.forEachIndexed { index, clothes ->
-                    Log.e("TAG", "list :: index - ${index} / uri - ${list.get(index).imageUri}")
-                }
-                rvClothes.adapter = MainClothesAdapter(
-                    list,
-                    LayoutInflater.from(this@MainBoardActivity2),
-                    glide
-                )
-
+        var uri: Uri? = null
+        var name:String? = null
+        var index: Int = 0
+        var testList = mutableListOf<Uri>()
+        firestore?.collection(temp)?.get()?.addOnSuccessListener { data ->
+            clotheslist.clear()
+            data.forEach { value ->
+                Log.e("TAG", value["imageUri"] as String)
+                uri = Uri.parse(value["imageUri"] as String)
+                name = value["name"] as String
+                clothes = Clothes(uri, name)
+                clotheslist.add(clothes)
             }
 
-            override fun onCancelled(error: DatabaseError) {
+            clotheslist.forEach {
+                Log.d("TAG", it.imageUri.toString())
             }
+            rvClothes.adapter = MainClothesAdapter(
+                clotheslist,
+                LayoutInflater.from(this@MainBoardActivity2),
+                glide
+            )
+        }
 
-        })
     }
 
 
@@ -196,10 +295,35 @@ class MainBoardActivity2 : AppCompatActivity() {
     }
 
 
-    private fun getAccessories(sky:String, rainPercent:String) {
-        if (sky.equals("1")) {
+    private fun getAccessories(sky: String, rainPercent: String) {
+        val rainPercentInt = rainPercent.toInt()
+        val rainList : List<Int> = listOf(
+            R.drawable.umbrella,
+            R.drawable.boots
+        )
 
+        val rainListName:List<String> = listOf(
+            "우산",
+            "레인부츠"
+        )
+        if (sky.equals("1")) {
+            val accessories = Accessories(resourceToUri(this, R.drawable.sunglasses), "선글라스")
+            accessoriesList.add(accessories)
         }
+
+        if (rainPercentInt >= 60) {
+            rainList.forEachIndexed { index, it ->
+                val accessories = Accessories(resourceToUri(this, it), rainListName.get(index))
+                accessoriesList.add(accessories)
+            }
+        }
+
+        rvAccessories.adapter = AccessoriesAdapter(
+            accessoriesList,
+            LayoutInflater.from(this),
+            glide
+        )
+
     }
 
 
