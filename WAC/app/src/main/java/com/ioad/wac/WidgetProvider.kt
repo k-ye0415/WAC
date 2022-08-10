@@ -36,15 +36,15 @@ class WidgetProvider : AppWidgetProvider() {
 //            val views:RemoteViews = addView(context)
 //            appWidgetManager?.updateAppWidget(it, views)
 //            updateAppWidget(context, appWidgetManager, appWidgetId);
+            val serviceIntent = Intent(context, MyRemoteViewsService::class.java)
+            val widget = RemoteViews(context?.packageName, R.layout.widget)
+            widget.setRemoteAdapter(R.id.lv_widget, serviceIntent)
+
+            appWidgetManager?.updateAppWidget(appWidgetIds, widget)
         }
 
-        val serviceIntent = Intent(context, MyRemoteViewsService::class.java)
-        val widget = RemoteViews(context?.packageName, R.layout.widget)
-        widget.setRemoteAdapter(R.id.lv_widget, serviceIntent)
 
-        appWidgetManager?.updateAppWidget(appWidgetIds, widget)
-
-        super.onUpdate(context, appWidgetManager, appWidgetIds)
+//        super.onUpdate(context, appWidgetManager, appWidgetIds)
     }
 
 

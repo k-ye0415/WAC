@@ -2,6 +2,7 @@ package com.ioad.wac.adapter
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import com.ioad.wac.R
@@ -48,6 +49,8 @@ class RemoteViewsFactory(context: Context):RemoteViewsService.RemoteViewsFactory
     override fun getViewAt(position: Int): RemoteViews {
         val listViewWidget = RemoteViews(context?.packageName, R.layout.widget_item)
         listViewWidget.setTextViewText(R.id.tv_widget_item, arrayList?.get(position)?.content)
+
+        Log.e("TAG", "RemoteViewsFactory :: " + arrayList?.get(position)?.content)
 
         val dataIntent = Intent()
         dataIntent.putExtra("item_id", arrayList?.get(position)?.id)

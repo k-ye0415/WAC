@@ -7,4 +7,6 @@
     android:resizeMode="vertical|horizontal"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- previewLayout 은 위젯 선택할 때 보여지는 이미지 -->
+
 </appwidget-provider>
