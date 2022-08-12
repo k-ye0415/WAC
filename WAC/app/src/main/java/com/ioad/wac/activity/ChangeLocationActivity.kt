@@ -11,10 +11,17 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
+import com.ioad.wac.LocationDB
 import com.ioad.wac.R
 import com.ioad.wac.adapter.LocationAdapter
+import com.ioad.wac.databinding.ActivityChangeLocationBinding
+import com.ioad.wac.model.Location
 import jxl.Workbook
 import jxl.read.biff.BiffException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.InputStream
 
@@ -24,12 +31,19 @@ class ChangeLocationActivity : AppCompatActivity() {
     lateinit var btnSearch: Button
     lateinit var rvLocation: RecyclerView
 
+    lateinit var db: LocationDB
+
+    var nx = ""
+    var ny = ""
+    var locationList = ArrayList<String>()
     var location = ""
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_change_location)
+
+        db = LocationDB.getInstance(this)!!
 
         etLocation = findViewById(R.id.et_location)
         btnSearch = findViewById(R.id.btn_search)
@@ -38,25 +52,23 @@ class ChangeLocationActivity : AppCompatActivity() {
         etLocation.doAfterTextChanged {
             location = it.toString().trim()
         }
-
-//        etLocation.doOnTextChanged { text, start, before, count ->
-//            location = text.toString().trim()
-//            Log.e("TAG", location)
-//            readExcel(location)
-//            if (location.length == 0) {
-//                locationList.clear()
-//            }
-//        }
-
-
+        
         btnSearch.setOnClickListener {
             readExcel(location)
+
+            addLocation()
+
         }
     }
 
-    var nx = ""
-    var ny = ""
-    var locationList = ArrayList<String>()
+
+    private fun addLocation() {
+        var locationData = Location(location, false)
+        CoroutineScope(Dispatchers.IO).launch {
+            db.locationDAO().insertLocation(locationData)
+        }
+    }
+
 
     fun readExcel(localName: String?) {
         try {
@@ -77,14 +89,6 @@ class ChangeLocationActivity : AppCompatActivity() {
                         if (contents.contains(localName!!)) {
                             locationList.add(contents)
                         }
-//                        if (contents.contains(localName!!)) {
-//                            Log.e("TAG", area)
-//                            Log.e("TAG", zone)
-//                            Log.d("TAG", contents)
-//                            nx = sheet.getCell(2, row).contents
-//                            ny = sheet.getCell(3, row).contents
-//                            row = rowTotal
-//                        }
                         row++
                     }
                 }

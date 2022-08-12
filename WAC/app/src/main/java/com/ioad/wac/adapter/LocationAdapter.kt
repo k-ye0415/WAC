@@ -8,24 +8,29 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
+import com.ioad.wac.LocationDB
 import com.ioad.wac.R
 import com.ioad.wac.activity.MainBoardActivity2
+import com.ioad.wac.databinding.ActivityChangeLocationBinding
+import com.ioad.wac.model.Location
 
 class LocationAdapter(
     val locationList:ArrayList<String>,
     val inflater: LayoutInflater,
-    val context:Context
+    val context:Context,
 ) : RecyclerView.Adapter<LocationAdapter.ViewHolder>(){
+
     inner class ViewHolder(itemView:View):RecyclerView.ViewHolder(itemView) {
         val tvLocationItem:TextView
         init {
 
             tvLocationItem = itemView.findViewById(R.id.tv_location_item)
             itemView.setOnClickListener {
-                Toast.makeText(context, locationList.get(adapterPosition), Toast.LENGTH_SHORT).show()
                 val intent = Intent(context, MainBoardActivity2::class.java)
                 intent.putExtra("SEARCH_LOCATION", locationList.get(adapterPosition))
                 context.startActivity(intent)
+
             }
         }
     }

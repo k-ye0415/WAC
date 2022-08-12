@@ -15,6 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.google.firebase.auth.FirebaseAuth
@@ -26,8 +27,10 @@ import com.ioad.wac.*
 import com.ioad.wac.R
 import com.ioad.wac.adapter.AccessoriesAdapter
 import com.ioad.wac.adapter.MainClothesAdapter
+import com.ioad.wac.databinding.ActivityMainBoardBinding
 import com.ioad.wac.model.Accessories
 import com.ioad.wac.model.Clothes
+import com.ioad.wac.model.Location
 import jxl.Workbook
 import jxl.read.biff.BiffException
 import kotlinx.coroutines.*
@@ -49,7 +52,6 @@ class MainBoardActivity2 : AppCompatActivity() {
     var clotheslist = ArrayList<Clothes>()
     var accessoriesList = ArrayList<Accessories>()
     lateinit var clothes: Clothes
-
 
     lateinit var rvClothes: RecyclerView
     lateinit var rvAccessories: RecyclerView
@@ -113,6 +115,17 @@ class MainBoardActivity2 : AppCompatActivity() {
             val location = local[2]
             tvLocation.text = "${local[0]} ${local[1]} ${local[2]}"
             readExcel(location)
+
+
+            var locationData = Location(intentLocation, false)
+
+            val db = Room.databaseBuilder(
+                this,
+                LocationDB::class.java,
+                "location_database"
+            ).build()
+
+            db.locationDAO().insertLocation(locationData)
         }
 
     }
