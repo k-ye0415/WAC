@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -13,6 +14,7 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
@@ -20,6 +22,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.*
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.UploadTask
 import com.ioad.wac.R
@@ -34,9 +37,6 @@ import java.lang.Exception
 
 class IntroActivity : AppCompatActivity() {
 
-    lateinit var database: FirebaseDatabase
-    lateinit var dbReference: DatabaseReference
-    lateinit var storage: FirebaseStorage
     var auth: FirebaseAuth? = null
     var firestore: FirebaseFirestore? = null
 
@@ -52,12 +52,28 @@ class IntroActivity : AppCompatActivity() {
         Manifest.permission.INTERNET
     )
 
+    var token = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_intro)
 
         auth = Firebase.auth
         firestore = FirebaseFirestore.getInstance()
+
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("TAG", "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+
+            // Get new FCM registration token
+            token = task.result
+            Log.d("TAG", token)
+
+        })
+
 
         val sharedPreferences = getSharedPreferences("USER_INFO", Context.MODE_PRIVATE)
         val token = sharedPreferences.getString("TOKEN", "empty")
@@ -74,43 +90,18 @@ class IntroActivity : AppCompatActivity() {
             }
         }
 
-
-
-        database = FirebaseDatabase.getInstance()
-        dbReference = database.reference.child("images")
-        storage = FirebaseStorage.getInstance()
-
-
-//        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
-//            if (!task.isSuccessful) {
-//                Log.w("TAG", "Fetching FCM registration token failed", task.exception)
-//                return@OnCompleteListener
-//            }
-//
-//            // Get new FCM registration token
-//            val token = task.result
-//            Log.d("TAG", token)
-//
-//            // Log and toast
-////            val msg = getString(R.string.msg_token_fmt, token)
-////            Log.d("TAG", msg)
-//            Toast.makeText(baseContext, token, Toast.LENGTH_SHORT).show()
-//        })
-
-//        requestPermission()
         checkRunTimePermission()
-//        settingList()
-//        insertClothesImages()
+        insertClothesImages()
+
 
     } // onCreate
 
 
     fun insertClothesImages() {
-//        val temperatureList: List<List<Int>> = listOf(
-//            clothesImages.temperature,
-////            temperature23to27
-//        )
-        val temperatureList: List<Array<Int>> = listOf(
+
+        val token = token.replace("/", "_")
+        Log.e("TAG", token)
+        val temperatureList: List<Map<String, Int>> = listOf(
             clothesImages.temperature28,
             clothesImages.temperature23to27,
             clothesImages.temperature20to22,
@@ -132,46 +123,17 @@ class IntroActivity : AppCompatActivity() {
                 5 -> temperature = "4to8"
                 else -> temperature = "3"
             }
-            list.forEachIndexed { index, value ->
-                val imageUri: Uri? = resourceToUri(this, value)
-                Log.e("TAG", "temperature : $temperature / " + imageUri.toString())
-                Log.e("TAG", "name : ${resources.getResourceEntryName(value)}")
-                Log.e("TAG", "index : ${index + 1}")
-//                val clothes = Clothes(imageUri)
-//                firestore?.collection(temperature)?.document((index + 1).toString())?.set(clothes)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                var index = 1
+                list.forEach { name, value ->
+                    val name = name
+                    val imageUri: Uri? = resourceToUri(this, value)
+                    val clothes = Clothes(imageUri, name)
+                    firestore?.collection(temperature)?.document((index).toString())?.set(clothes)
+                    index++
+                }
             }
         }
-
-
-//        val tempList = listOf<Int>(
-//                        R.drawable.sleeveless,
-//            R.drawable.tshirt,
-//            R.drawable.short_pants,
-//            R.drawable.skirt
-//        )
-//        var clothes = Clothes(1, "what?")
-//        Log.e("TAG", auth?.currentUser?.uid.toString())
-//        firestore?.collection("ClothesImages")?.document("27")?.set(clothes)
-
-//        val clothes = Clothes(resourceToUri(this, R.drawable.sleeveless))
-//        firestore?.collection("ClothesImages")?.document("27")?.set(clothes)
-
-
-
-        // 가져올때 이거 사용하면될거같고
-//        var uri: Uri? = null
-//        firestore?.collection("ClothesImages")?.get()?.addOnSuccessListener {
-//            for (value in it) {
-//                Log.e("TAG", value["index"].toString())
-//                Log.e("TAG", value["imageUriStr"] as String)
-//                Log.e("TAG", value["imageUri"] as String)
-//                if ((value["imageUri"] as String).contains("sleeveless")) {
-//                    uri = Uri.parse(value["imageUri"] as String)
-//                }
-//            }
-//
-////            glide.load(uri).into(test_image)
-//        }
 
     }
 
@@ -282,78 +244,6 @@ class IntroActivity : AppCompatActivity() {
             }
         }
     }
-
-//    fun settingList() {
-//        val temperatureList: List<List<Int>> = listOf(
-////            clothesImages.temperature,
-////            temperature23to27
-//        )
-//
-//
-////        val imageUri: Uri? = resourceToUri(this, R.drawable.sleeveless)
-////        Log.e("TAG", imageUri.toString())
-//
-//
-//        temperatureList.forEachIndexed { listIndex, list ->
-//            Log.d("TAG", "index :: " + listIndex)
-//            var temperature = ""
-//            when (listIndex) {
-//                0 -> temperature = "28"
-//                else -> temperature = "23to27"
-//            }
-//            list.forEachIndexed { index, value ->
-//                val imageUri: Uri? = resourceToUri(this, value)
-//                Log.e("TAG", "temperature : $temperature / " + imageUri.toString())
-//                Log.e("TAG", "name : ${resources.getResourceEntryName(value)}")
-//                Log.e("TAG", "index : ${index + 1}")
-//                CoroutineScope(Dispatchers.IO).launch {
-//                    uploadToFirebase(
-//                        imageUri!!,
-//                        temperature,
-//                        resources.getResourceEntryName(value),
-//                        index + 1
-//                    )
-//                }
-//            }
-//        }
-//    }
-
-
-    suspend fun uploadToFirebase(
-        imageUri: Uri,
-        temperature: String,
-        imageName: String,
-        index: Int
-    ) {
-        Log.d("TAG", "----------------------------------------------------")
-        Log.d("TAG", "imageUri : " + imageUri.toString())
-        Log.d("TAG", "temperature : " + temperature.toString())
-        Log.d("TAG", "imageName : " + imageName.toString())
-        Log.d("TAG", "index : " + index.toString())
-        Log.d("TAG", "----------------------------------------------------")
-        val storageRef = storage.reference
-        val fileRef =
-            storageRef.child("clothes/${temperature}/${imageName}.png")
-        fileRef.putFile(imageUri)
-            .addOnSuccessListener(object : OnSuccessListener<UploadTask.TaskSnapshot> {
-                override fun onSuccess(taskSnapshot: UploadTask.TaskSnapshot?) {
-                    fileRef.downloadUrl.addOnSuccessListener(object : OnSuccessListener<Uri> {
-                        override fun onSuccess(uri: Uri?) {
-                            val clothes = Clothes(uri.toString())
-//                        val modelId = dbReference.key
-//                        if (modelId != null) {
-                            dbReference.child(temperature).child("$index").setValue(clothes)
-//                        }
-                        }
-                    })
-                }
-            }).addOnFailureListener(object : OnFailureListener {
-                override fun onFailure(p0: Exception) {
-                    Log.e("TAG", "error")
-                }
-            }).await()
-    }
-
 
     fun resourceToUri(context: Context, resID: Int): Uri? {
         return Uri.parse(

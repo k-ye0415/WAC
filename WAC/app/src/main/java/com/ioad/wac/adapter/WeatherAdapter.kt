@@ -7,7 +7,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.ioad.wac.R
 import com.ioad.wac.model.Weather
-import com.ioad.wac.model.WeatherJAVA
 
 class WeatherAdapter(
     val weatherList:Array<Weather>,

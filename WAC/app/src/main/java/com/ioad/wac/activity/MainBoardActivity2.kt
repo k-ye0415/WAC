@@ -2,6 +2,7 @@ package com.ioad.wac.activity
 
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.location.Address
 import android.location.Geocoder
 import android.net.Uri
@@ -21,7 +22,6 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.*
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
 import com.ioad.wac.*
 import com.ioad.wac.R
 import com.ioad.wac.adapter.AccessoriesAdapter
@@ -31,6 +31,7 @@ import com.ioad.wac.model.Clothes
 import jxl.Workbook
 import jxl.read.biff.BiffException
 import kotlinx.coroutines.*
+import org.w3c.dom.Text
 import retrofit2.Call
 import retrofit2.Response
 import java.io.IOException
@@ -42,37 +43,28 @@ import kotlin.collections.ArrayList
 
 class MainBoardActivity2 : AppCompatActivity() {
 
-    lateinit var rvClothes: RecyclerView
-    lateinit var rvAccessories: RecyclerView
     lateinit var glide: RequestManager
-    lateinit var database: FirebaseDatabase
-    lateinit var dbReference: DatabaseReference
     var auth: FirebaseAuth? = null
     var firestore: FirebaseFirestore? = null
-    val storage: FirebaseStorage = FirebaseStorage.getInstance()
-    val storageRef = storage.reference
-    val pathRef = storageRef.child("clothes")
-    val listRef = pathRef.listAll()
     var clotheslist = ArrayList<Clothes>()
     var accessoriesList = ArrayList<Accessories>()
     lateinit var clothes: Clothes
 
+
+    lateinit var rvClothes: RecyclerView
+    lateinit var rvAccessories: RecyclerView
     lateinit var tvNowTemp: TextView
     lateinit var tvRainPercent: TextView
-    lateinit var tvRainMM: TextView
     lateinit var ivMainBg: ImageView
-    lateinit var tvNowFcstTime: TextView
+    lateinit var tvLocation: TextView
+    lateinit var tvChangeLocation: TextView
 
     private var gpsTracker: GpsTracker? = null
 
-    private val GPS_ENABLE_REQUEST_CODE = 2001
-    private val PERMISSIONS_REQUEST_CODE = 100
-
-
     private var base_date = ""  // 발표 일자
     private var base_time = ""      // 발표 시각
-    private var nx = "60"               // 예보지점 X 좌표
-    private var ny = "125"              // 예보지점 Y 좌표
+    private var nx = ""               // 예보지점 X 좌표
+    private var ny = ""              // 예보지점 Y 좌표
     private var nowTemp: String = ""
     private var nowSky: String = ""
     private var nowRainPercent: String = ""
@@ -84,15 +76,12 @@ class MainBoardActivity2 : AppCompatActivity() {
         auth = Firebase.auth
         firestore = FirebaseFirestore.getInstance()
 
-
         tvNowTemp = findViewById(R.id.tv_now_temp)
         tvRainPercent = findViewById(R.id.tv_rain_percent)
-        tvRainMM = findViewById(R.id.tv_rain_mm)
         ivMainBg = findViewById(R.id.iv_main_bg)
-        tvNowFcstTime = findViewById(R.id.tv_now_fcst)
+        tvLocation = findViewById(R.id.tv_location)
+        tvChangeLocation = findViewById(R.id.tv_change_location)
 
-        database = FirebaseDatabase.getInstance()
-        dbReference = database.reference.child("images")
         glide = Glide.with(this)
 
         rvClothes = findViewById(R.id.rv_clothes)
@@ -102,12 +91,30 @@ class MainBoardActivity2 : AppCompatActivity() {
         rvAccessories.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
+        tvChangeLocation.setOnClickListener {
+            startActivity(Intent(this, ChangeLocationActivity::class.java))
+        }
+
         // 위치정보 가져오기
         getLocation()
 
-
         // 날씨 정보 가져오기
         setWeather(nx, ny)
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val intent = intent
+        val intentLocation = intent.getStringExtra("SEARCH_LOCATION")
+        if (intentLocation != null) {
+        val local = intentLocation.toString().split(" ")
+            Log.e("TAG", "intent " + local.toString())
+            val location = local[2]
+            tvLocation.text = "${local[0]} ${local[1]} ${local[2]}"
+            readExcel(location)
+        }
+
     }
 
 
@@ -122,6 +129,7 @@ class MainBoardActivity2 : AppCompatActivity() {
         val local = address.toString().split(" ")
         Log.e("TAG", local.toString())
         val location = local[2]
+        tvLocation.text = "${local[0]} ${local[1]} ${local[2]}"
         readExcel(location)
 
     }
@@ -154,6 +162,7 @@ class MainBoardActivity2 : AppCompatActivity() {
     }
 
     fun readExcel(localName: String?) {
+        Log.e("TAG", "readExcel : localName :: " + localName)
         try {
             val inputStream: InputStream = baseContext.resources.assets.open("local_name.xls")
             val wb: Workbook = Workbook.getWorkbook(inputStream)
@@ -165,10 +174,13 @@ class MainBoardActivity2 : AppCompatActivity() {
                     val rowTotal = sheet.getColumn(colTotal - 1).size
                     var row = rowIndexStart
                     while (row < rowTotal) {
-                        val contents = sheet.getCell(0, row).contents
+                        val area = sheet.getCell(0, row).contents
+                        val zone = sheet.getCell(1, row).contents
+                        val local = sheet.getCell(2, row).contents
+                        val contents = area + " " + zone + " " + local
                         if (contents.contains(localName!!)) {
-                            nx = sheet.getCell(1, row).contents
-                            ny = sheet.getCell(2, row).contents
+                            nx = sheet.getCell(3, row).contents
+                            ny = sheet.getCell(4, row).contents
                             row = rowTotal
                         }
                         row++
@@ -183,11 +195,11 @@ class MainBoardActivity2 : AppCompatActivity() {
             e.printStackTrace()
         }
         // x, y = String형 전역변수
-        Log.i("격자값", "x = " + nx + "  y = " + ny)
+        Log.i("TAG", "x = " + nx + "  y = " + ny)
     }
 
 
-    fun getImages(context: Context, nowTemp: String) {
+    fun setClothesListImages(context: Context, nowTemp: String) {
         var tempInt = nowTemp.toInt()
         var temp: String = ""
         when (tempInt) {
@@ -201,22 +213,16 @@ class MainBoardActivity2 : AppCompatActivity() {
             else -> temp = "error"
         }
         var uri: Uri? = null
-        var name:String? = null
-        var index: Int = 0
-        var testList = mutableListOf<Uri>()
+        var name: String? = null
         firestore?.collection(temp)?.get()?.addOnSuccessListener { data ->
             clotheslist.clear()
             data.forEach { value ->
-                Log.e("TAG", value["imageUri"] as String)
                 uri = Uri.parse(value["imageUri"] as String)
-                name = value["name"] as String
+                name = value["imageName"] as String
                 clothes = Clothes(uri, name)
                 clotheslist.add(clothes)
             }
 
-            clotheslist.forEach {
-                Log.d("TAG", it.imageUri.toString())
-            }
             rvClothes.adapter = MainClothesAdapter(
                 clotheslist,
                 LayoutInflater.from(this@MainBoardActivity2),
@@ -260,9 +266,6 @@ class MainBoardActivity2 : AppCompatActivity() {
                     list.forEach { item ->
                         if (lastTime.equals(item.fcstTime)) {
                             when (item.category) {
-                                "PCP" -> {
-                                    tvRainMM.text = item.fcstValue
-                                }
                                 "SKY" -> {
                                     setSkyImage(item.fcstValue)
                                 }
@@ -278,11 +281,8 @@ class MainBoardActivity2 : AppCompatActivity() {
                             }
                         }
                     }
-
-                    tvNowFcstTime.text =
-                        "현재시각 - ${timeH} : ${timeM} / 측정시각 - ${lastTime.substring(0, 2)} : 00"
-                    getImages(this@MainBoardActivity2, nowTemp)
-                    getAccessories(nowSky, nowRainPercent)
+                    setClothesListImages(this@MainBoardActivity2, nowTemp)
+                    setAccessoriesImages(nowSky, nowRainPercent)
                 }
             }
 
@@ -295,14 +295,14 @@ class MainBoardActivity2 : AppCompatActivity() {
     }
 
 
-    private fun getAccessories(sky: String, rainPercent: String) {
+    private fun setAccessoriesImages(sky: String, rainPercent: String) {
         val rainPercentInt = rainPercent.toInt()
-        val rainList : List<Int> = listOf(
+        val rainList: List<Int> = listOf(
             R.drawable.umbrella,
             R.drawable.boots
         )
 
-        val rainListName:List<String> = listOf(
+        val rainListName: List<String> = listOf(
             "우산",
             "레인부츠"
         )

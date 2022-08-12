@@ -18,21 +18,34 @@
 
         <LinearLayout
             android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="20dp"
+            android:gravity="right">
+
+            <TextView
+                android:id="@+id/tv_change_location"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@color/black" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tv_now_fcst"
+                android:id="@+id/tv_location"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="60dp"
                 android:gravity="center"
-                android:text="현재시각:1233 / 측정시각:1243" />
+                android:text="location" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="60dp"
                 android:layout_marginBottom="10dp"
                 android:orientation="horizontal">
 
@@ -79,26 +92,6 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="강수량 :"
-                    android:textSize="20dp" />
-
-                <TextView
-                    android:id="@+id/tv_rain_mm"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="20dp" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:background="#3BFFFFFF"
                 android:orientation="vertical"
@@ -115,7 +108,7 @@
                     android:id="@+id/rv_clothes"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"/>
+                    android:layout_gravity="center" />
             </LinearLayout>
 
             <LinearLayout
@@ -137,7 +130,7 @@
                     android:id="@+id/rv_accessories"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"/>
+                    android:layout_gravity="center" />
             </LinearLayout>
         </LinearLayout>
 
