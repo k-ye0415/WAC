@@ -23,6 +23,7 @@
             android:exported="false" />
         <activity
             android:name=".activity.MainBoardActivity2"
+            android:theme="@style/skyTypeTheme"
             android:exported="false" />
         <activity
             android:name=".activity.MainBoardActivity"

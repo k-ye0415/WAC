@@ -71,6 +71,14 @@ class MainBoardActivity2 : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main_board)
 
+//        val locationDB = LocationDB.getInstance(this)
+//
+//        val database = Room.databaseBuilder(
+//            this,
+//            LocationDB::class.java,
+//            "location_database"
+//        ).allowMainThreadQueries().build()
+
         auth = Firebase.auth
         firestore = FirebaseFirestore.getInstance()
 
@@ -269,8 +277,8 @@ class MainBoardActivity2 : AppCompatActivity() {
 
         // 날씨 정보 가져오기
         // (한 페이지 결과 수 = 60, 페이지 번호 = 1, 응답 자료 형식-"JSON", 발표 날싸, 발표 시각, 예보지점 좌표)
-//        val call = ApiObject.retrofitService.GetWeather(60, 1, "JSON", base_date, base_time, nx, ny)
-        val call = ApiObject.retrofitService.GetWeather(60, 1, "JSON", base_date, "0800", nx, ny)
+        val call = ApiObject.retrofitService.GetWeather(60, 1, "JSON", base_date, base_time, nx, ny)
+//        val call = ApiObject.retrofitService.GetWeather(60, 1, "JSON", base_date, "0800", nx, ny)
 
         // 비동기적으로 실행하기
         call.enqueue(object : retrofit2.Callback<WEATHER> {
@@ -368,18 +376,71 @@ class MainBoardActivity2 : AppCompatActivity() {
 
 
     fun setSkyImage(sky: String) {
-        when (sky) {
-            "1" -> { // 맑음
-                glide.load(resourceToUri(this, R.drawable.clear_sky)).centerCrop().into(ivMainBg)
-                nowSky = "1"
+        val cal = Calendar.getInstance()
+        val timeH = SimpleDateFormat("HH", Locale.getDefault()).format(cal.time) // 현재 시각
+
+        when (timeH.toInt()) {
+            in 0..5 -> {
+                Log.e("TAG", "Night")
+                setTheme(R.style.skyTypeTheme)
+                when (sky) {
+                    "1" -> { // 맑음
+                        glide.load(resourceToUri(this, R.drawable.clear_sky_night)).centerCrop()
+                            .into(ivMainBg)
+                        nowSky = "1"
+                    }
+                    "3" -> { // 구름
+                        glide.load(resourceToUri(this, R.drawable.cloud_night)).centerCrop()
+                            .into(ivMainBg)
+                        nowSky = "3"
+                    }
+                    else -> { // 흐림
+                        glide.load(resourceToUri(this, R.drawable.dark_cloud_night)).centerCrop()
+                            .into(ivMainBg)
+                        nowSky = "4"
+                    }
+                }
             }
-            "3" -> { // 구름
-                glide.load(resourceToUri(this, R.drawable.cloud)).centerCrop().into(ivMainBg)
-                nowSky = "3"
+            in 6..18 -> {
+                Log.e("TAG", "Morning and DayTime")
+                when (sky) {
+                    "1" -> { // 맑음
+                        glide.load(resourceToUri(this, R.drawable.clear_sky)).centerCrop()
+                            .into(ivMainBg)
+                        nowSky = "1"
+                    }
+                    "3" -> { // 구름
+                        glide.load(resourceToUri(this, R.drawable.cloud)).centerCrop()
+                            .into(ivMainBg)
+                        nowSky = "3"
+                    }
+                    else -> { // 흐림
+                        glide.load(resourceToUri(this, R.drawable.dark_cloud)).centerCrop()
+                            .into(ivMainBg)
+                        nowSky = "4"
+                    }
+                }
             }
-            else -> { // 흐림
-                glide.load(resourceToUri(this, R.drawable.dark_cloud)).centerCrop().into(ivMainBg)
-                nowSky = "4"
+            else -> {
+                Log.e("TAG", "Evening")
+                setTheme(R.style.skyTypeTheme)
+                when (sky) {
+                    "1" -> { // 맑음
+                        glide.load(resourceToUri(this, R.drawable.clear_sky_night)).centerCrop()
+                            .into(ivMainBg)
+                        nowSky = "1"
+                    }
+                    "3" -> { // 구름
+                        glide.load(resourceToUri(this, R.drawable.cloud_night)).centerCrop()
+                            .into(ivMainBg)
+                        nowSky = "3"
+                    }
+                    else -> { // 흐림
+                        glide.load(resourceToUri(this, R.drawable.dark_cloud_night)).centerCrop()
+                            .into(ivMainBg)
+                        nowSky = "4"
+                    }
+                }
             }
         }
     }

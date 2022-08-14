@@ -1,6 +1,7 @@
 package com.ioad.wac.adapter
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.ioad.wac.DiffUtilCallback
 import com.ioad.wac.R
+import com.ioad.wac.activity.MainBoardActivity2
 import com.ioad.wac.database.Location
 import com.ioad.wac.database.LocationDB
 import com.ioad.wac.model.Locations
@@ -36,36 +38,15 @@ class RecentLocationAdapter(
         val btnDelete:TextView
 
         init {
-            val database = Room.databaseBuilder(
-                context,
-                LocationDB::class.java,
-                "location_database"
-            ).allowMainThreadQueries().build()
-
-
             tvRecentLocation = itemView.findViewById(R.id.tv_recent_location_item)
             btnBookmark = itemView.findViewById(R.id.btn_bookmark)
             btnDelete = itemView.findViewById(R.id.btn_delete)
 
-
-//            var locationData = Location(selectLocation, "Y", setDate(), "N", "null")
-//
-//            database.locationDAO().insertLocation(locationData)
-
-//            btnBookmark.setOnClickListener {
-//                Log.e("TAG", "bookmark Stauts :: " + recentLocationList.get(adapterPosition).bookmark)
-//                val bookmarkStatus = recentLocationList.get(adapterPosition).bookmark
-//                if (bookmarkStatus.equals("Y")) {
-//                    database.locationDAO().updateRecentBookmark("N", recentLocationList.get(adapterPosition).id.toInt())
-//                } else {
-//                    database.locationDAO().updateRecentBookmark("Y", recentLocationList.get(adapterPosition).id.toInt())
-//                }
-//
-//            }
-
-
-            btnDelete.setOnClickListener {
-                database.locationDAO().updateRecentLocationDelete("Y", setDate(), recentLocationList.get(adapterPosition).id.toInt())
+            itemView.setOnClickListener {
+                val selectLocation = recentLocationList.get(adapterPosition).location
+                val intent = Intent(context, MainBoardActivity2::class.java)
+                intent.putExtra("SEARCH_LOCATION", selectLocation)
+                context.startActivity(intent)
             }
         }
     }
@@ -75,8 +56,6 @@ class RecentLocationAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-
-
 
         holder.tvRecentLocation.text = recentLocationList.get(position).location
         if (recentLocationList.get(position).bookmark.equals("Y")) {
@@ -94,6 +73,11 @@ class RecentLocationAdapter(
             changeList(reloadList())
         }
 
+        holder.btnDelete.setOnClickListener {
+            database.locationDAO().updateRecentLocationDelete("Y", setDate(), recentLocationList.get(position).id.toInt())
+            changeList(reloadList())
+        }
+
 
     }
 
@@ -101,7 +85,7 @@ class RecentLocationAdapter(
         return recentLocationList.size
     }
 
-    fun reloadList():ArrayList<Locations> {
+    private fun reloadList():ArrayList<Locations> {
         val newList = ArrayList<Locations>()
         val recentLocationList = database.locationDAO().getRecentLocationList()
         recentLocationList.forEach {
@@ -119,7 +103,7 @@ class RecentLocationAdapter(
     }
 
 
-    fun changeList(list:ArrayList<Locations>) {
+    private fun changeList(list:ArrayList<Locations>) {
         val diffUtilCallback = DiffUtilCallback(this.recentLocationList, list)
         val diffResult = DiffUtil.calculateDiff(diffUtilCallback)
 
