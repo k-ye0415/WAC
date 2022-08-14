@@ -7,7 +7,13 @@
     android:padding="10dp">
 
     <TextView
-        android:id="@+id/tv_location_item"
+        android:id="@+id/btn_bookmark"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/non_bookmark"
+        />
+    <TextView
+        android:id="@+id/tv_recent_location_item"
         android:layout_width="0px"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -16,11 +22,11 @@
         android:textSize="20dp"
         />
 
-<!--    <TextView-->
-<!--        android:id="@+id/btn_bookmark"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:background="@drawable/non_bookmark"-->
-<!--        />-->
+    <TextView
+        android:id="@+id/btn_delete"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/delete_icon"
+        />
 
 </LinearLayout>

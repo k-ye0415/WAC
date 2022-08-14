@@ -15,7 +15,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.google.firebase.auth.FirebaseAuth
@@ -27,14 +26,11 @@ import com.ioad.wac.*
 import com.ioad.wac.R
 import com.ioad.wac.adapter.AccessoriesAdapter
 import com.ioad.wac.adapter.MainClothesAdapter
-import com.ioad.wac.databinding.ActivityMainBoardBinding
 import com.ioad.wac.model.Accessories
 import com.ioad.wac.model.Clothes
-import com.ioad.wac.model.Location
 import jxl.Workbook
 import jxl.read.biff.BiffException
 import kotlinx.coroutines.*
-import org.w3c.dom.Text
 import retrofit2.Call
 import retrofit2.Response
 import java.io.IOException
@@ -107,29 +103,38 @@ class MainBoardActivity2 : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+//        val database = Room.databaseBuilder(
+//            applicationContext,
+//            LocationDB::class.java,
+//            "location_database"
+//        ).allowMainThreadQueries().build()
+
+
         val intent = intent
         val intentLocation = intent.getStringExtra("SEARCH_LOCATION")
         if (intentLocation != null) {
-        val local = intentLocation.toString().split(" ")
+            val local = intentLocation.toString().split(" ")
             Log.e("TAG", "intent " + local.toString())
             val location = local[2]
             tvLocation.text = "${local[0]} ${local[1]} ${local[2]}"
             readExcel(location)
 
 
-            var locationData = Location(intentLocation, false)
-
-            val db = Room.databaseBuilder(
-                this,
-                LocationDB::class.java,
-                "location_database"
-            ).build()
-
-            db.locationDAO().insertLocation(locationData)
+//            var locationData = Location(intentLocation, false)
+//
+//            database.locationDAO().insertLocation(locationData)
+//            val db = Room.databaseBuilder(
+//                this,
+//                LocationDB::class.java,
+//                "location_database"
+//            ).build()
+//
+//            CoroutineScope(Dispatchers.IO).launch {
+//                db.locationDAO().insertLocation(locationData)
+//            }
         }
 
     }
-
 
     private fun getLocation() {
         gpsTracker = GpsTracker(this)
@@ -264,7 +269,8 @@ class MainBoardActivity2 : AppCompatActivity() {
 
         // 날씨 정보 가져오기
         // (한 페이지 결과 수 = 60, 페이지 번호 = 1, 응답 자료 형식-"JSON", 발표 날싸, 발표 시각, 예보지점 좌표)
-        val call = ApiObject.retrofitService.GetWeather(60, 1, "JSON", base_date, base_time, nx, ny)
+//        val call = ApiObject.retrofitService.GetWeather(60, 1, "JSON", base_date, base_time, nx, ny)
+        val call = ApiObject.retrofitService.GetWeather(60, 1, "JSON", base_date, "0800", nx, ny)
 
         // 비동기적으로 실행하기
         call.enqueue(object : retrofit2.Callback<WEATHER> {

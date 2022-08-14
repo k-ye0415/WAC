@@ -4,24 +4,20 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
 import androidx.core.widget.doAfterTextChanged
-import androidx.core.widget.doOnTextChanged
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import com.ioad.wac.LocationDB
+import com.ioad.wac.database.LocationDB
 import com.ioad.wac.R
 import com.ioad.wac.adapter.LocationAdapter
-import com.ioad.wac.databinding.ActivityChangeLocationBinding
-import com.ioad.wac.model.Location
+import com.ioad.wac.adapter.RecentLocationAdapter
+import com.ioad.wac.database.Location
+import com.ioad.wac.model.Locations
 import jxl.Workbook
 import jxl.read.biff.BiffException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.InputStream
 
@@ -30,12 +26,12 @@ class ChangeLocationActivity : AppCompatActivity() {
     lateinit var etLocation: EditText
     lateinit var btnSearch: Button
     lateinit var rvLocation: RecyclerView
-
-    lateinit var db: LocationDB
+    lateinit var rvRecentLocation: RecyclerView
 
     var nx = ""
     var ny = ""
     var locationList = ArrayList<String>()
+    var recentLocationsList = ArrayList<Locations>()
     var location = ""
 
 
@@ -43,29 +39,50 @@ class ChangeLocationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_change_location)
 
-        db = LocationDB.getInstance(this)!!
 
         etLocation = findViewById(R.id.et_location)
         btnSearch = findViewById(R.id.btn_search)
         rvLocation = findViewById(R.id.rv_location)
+        rvRecentLocation = findViewById(R.id.rv_recent_location)
+
+        rvLocation.visibility = View.INVISIBLE
+
+        val database = Room.databaseBuilder(
+            this,
+            LocationDB::class.java,
+            "location_database"
+        ).allowMainThreadQueries().build()
+
+        val recentLocationList = database.locationDAO().getRecentLocationList()
+        recentLocationList.forEach {
+            val locations = Locations(
+                it.id.toString(),
+                it.location,
+                it.bookmark,
+                it.saveDate,
+                it.deleteStatus,
+                it.deleteDate
+            )
+            recentLocationsList.add(locations)
+        }
+
+        rvRecentLocation.adapter = RecentLocationAdapter(
+            recentLocationsList,
+            LayoutInflater.from(this),
+            this
+        )
+
 
         etLocation.doAfterTextChanged {
+            rvRecentLocation.visibility = View.GONE
+            rvLocation.visibility = View.VISIBLE
             location = it.toString().trim()
         }
-        
+
         btnSearch.setOnClickListener {
             readExcel(location)
 
-            addLocation()
 
-        }
-    }
-
-
-    private fun addLocation() {
-        var locationData = Location(location, false)
-        CoroutineScope(Dispatchers.IO).launch {
-            db.locationDAO().insertLocation(locationData)
         }
     }
 

@@ -6,29 +6,45 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import com.ioad.wac.LocationDB
+import com.ioad.wac.database.LocationDB
 import com.ioad.wac.R
 import com.ioad.wac.activity.MainBoardActivity2
-import com.ioad.wac.databinding.ActivityChangeLocationBinding
-import com.ioad.wac.model.Location
+import com.ioad.wac.database.Location
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 class LocationAdapter(
-    val locationList:ArrayList<String>,
+    val locationList: ArrayList<String>,
     val inflater: LayoutInflater,
-    val context:Context,
-) : RecyclerView.Adapter<LocationAdapter.ViewHolder>(){
+    val context: Context,
+) : RecyclerView.Adapter<LocationAdapter.ViewHolder>() {
 
-    inner class ViewHolder(itemView:View):RecyclerView.ViewHolder(itemView) {
-        val tvLocationItem:TextView
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val tvLocationItem: TextView
+
         init {
 
             tvLocationItem = itemView.findViewById(R.id.tv_location_item)
             itemView.setOnClickListener {
+                val selectLocation = locationList.get(adapterPosition)
+
+                val database = Room.databaseBuilder(
+                    context,
+                    LocationDB::class.java,
+                    "location_database"
+                ).allowMainThreadQueries().build()
+
+
+                var locationData = Location(selectLocation, "Y", setDate(), "N", "null")
+
+                database.locationDAO().insertLocation(locationData)
+
+
                 val intent = Intent(context, MainBoardActivity2::class.java)
-                intent.putExtra("SEARCH_LOCATION", locationList.get(adapterPosition))
+                intent.putExtra("SEARCH_LOCATION", selectLocation)
                 context.startActivity(intent)
 
             }
@@ -45,5 +61,13 @@ class LocationAdapter(
 
     override fun getItemCount(): Int {
         return locationList.size
+    }
+
+
+    fun setDate(): String {
+        val cal = Calendar.getInstance()
+        val date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time)
+
+        return date
     }
 }
