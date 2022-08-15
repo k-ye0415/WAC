@@ -45,7 +45,7 @@ class IntroSecondFragment:Fragment() {
             // Log and toast
 //            val msg = getString(R.string.msg_token_fmt, token)
 //            Log.d("TAG", msg)
-            Toast.makeText(activity, token, Toast.LENGTH_SHORT).show()
+//            Toast.makeText(activity, token, Toast.LENGTH_SHORT).show()
         })
 
 

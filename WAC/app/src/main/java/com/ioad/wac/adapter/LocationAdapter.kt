@@ -38,7 +38,7 @@ class LocationAdapter(
                 ).allowMainThreadQueries().build()
 
 
-                var locationData = Location(selectLocation, "Y", setDate(), "N", "null")
+                var locationData = Location(selectLocation, "N", setDate(), "N", "null")
 
                 database.locationDAO().insertLocation(locationData)
 

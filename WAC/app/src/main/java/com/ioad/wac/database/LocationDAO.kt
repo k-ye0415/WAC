@@ -15,7 +15,7 @@ interface LocationDAO {
     fun getAllLocation(): List<Location>
 
 
-    @Query("SELECT * FROM location WHERE delete_status = 'N'")
+    @Query("SELECT * FROM Location WHERE delete_status = 'N' ORDER BY bookmark DESC")
     fun getRecentLocationList(): List<Location>
 
     @Query("UPDATE Location SET delete_status = :deleteStatus AND delete_date = :deleteDate WHERE id = :id")

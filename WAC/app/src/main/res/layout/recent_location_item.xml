@@ -8,8 +8,8 @@
 
     <TextView
         android:id="@+id/btn_bookmark"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:background="@drawable/non_bookmark"
         />
     <TextView
@@ -18,14 +18,15 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:layout_gravity="center"
-        android:text="@string/app_name"
         android:textSize="20dp"
+        android:layout_marginLeft="5dp"
+        android:textColor="@color/black"
         />
 
     <TextView
         android:id="@+id/btn_delete"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:background="@drawable/delete_icon"
         />
 

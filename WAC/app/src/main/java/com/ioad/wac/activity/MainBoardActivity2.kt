@@ -10,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.Window
+import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -39,6 +41,11 @@ import java.lang.IllegalArgumentException
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
+import android.os.Build
+import android.view.View
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+
 
 class MainBoardActivity2 : AppCompatActivity() {
 
@@ -69,16 +76,13 @@ class MainBoardActivity2 : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_main_board)
 
-//        val locationDB = LocationDB.getInstance(this)
-//
-//        val database = Room.databaseBuilder(
-//            this,
-//            LocationDB::class.java,
-//            "location_database"
-//        ).allowMainThreadQueries().build()
+        val windowInsetsController =
+            ViewCompat.getWindowInsetsController(window.decorView)
 
+        windowInsetsController?.isAppearanceLightNavigationBars = true
         auth = Firebase.auth
         firestore = FirebaseFirestore.getInstance()
 
@@ -124,7 +128,7 @@ class MainBoardActivity2 : AppCompatActivity() {
             val local = intentLocation.toString().split(" ")
             Log.e("TAG", "intent " + local.toString())
             val location = local[2]
-            tvLocation.text = "${local[0]} ${local[1]} ${local[2]}"
+            tvLocation.text = "${local[2]}"
             readExcel(location)
 
 
@@ -155,7 +159,7 @@ class MainBoardActivity2 : AppCompatActivity() {
         val local = address.toString().split(" ")
         Log.e("TAG", local.toString())
         val location = local[2]
-        tvLocation.text = "${local[0]} ${local[1]} ${local[2]}"
+        tvLocation.text = "${local[3]}"
         readExcel(location)
 
     }
