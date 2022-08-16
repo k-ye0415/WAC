@@ -7,8 +7,6 @@ import androidx.room.PrimaryKey
 @Entity
 class Location(
 
-    // 등록날짜 / 삭제날짜 / 삭제 여
-
     @PrimaryKey(autoGenerate = true)
     val id: Int,
 

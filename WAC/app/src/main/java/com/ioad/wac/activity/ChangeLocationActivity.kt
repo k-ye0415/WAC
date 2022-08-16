@@ -81,7 +81,6 @@ class ChangeLocationActivity : AppCompatActivity() {
             rvLocation.visibility = View.VISIBLE
             location = it.toString().trim()
             if (etLocation.text.length == 0) {
-                Log.e("TAG", "length is zero")
                 rvRecentLocation.visibility = View.VISIBLE
                 rvLocation.visibility = View.GONE
             }

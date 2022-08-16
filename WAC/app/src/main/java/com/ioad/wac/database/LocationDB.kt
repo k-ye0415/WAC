@@ -11,26 +11,4 @@ import com.ioad.wac.database.Location
 abstract class LocationDB:RoomDatabase() {
 
     abstract fun locationDAO(): LocationDAO
-
-//
-//    companion object {
-//        private var instance:LocationDB? = null
-//
-//        @Synchronized
-//        fun getInstance(context: Context): LocationDB? {
-//            if (instance == null) {
-//                synchronized(LocationDB::class) {
-//                    instance = Room.databaseBuilder(
-//                        context.applicationContext,
-//                        LocationDB::class.java,
-//                        "location_database"
-//                    ).build()
-//                }
-//            }
-//            return instance
-//        }
-//
-//    }
-
-
 }
