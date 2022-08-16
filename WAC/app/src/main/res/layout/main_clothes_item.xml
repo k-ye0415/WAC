@@ -15,8 +15,8 @@
         android:id="@+id/tv_main_clothes"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="옷이라눙"
         android:gravity="center"
+        android:textColor="@color/black"
         />
 
 

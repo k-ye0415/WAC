@@ -12,9 +12,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.Window
 import android.view.WindowManager
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -43,8 +40,11 @@ import java.util.*
 import kotlin.collections.ArrayList
 import android.os.Build
 import android.view.View
+import android.widget.*
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import kotlin.concurrent.thread
 
 
 class MainBoardActivity2 : AppCompatActivity() {
@@ -63,6 +63,13 @@ class MainBoardActivity2 : AppCompatActivity() {
     lateinit var ivMainBg: ImageView
     lateinit var tvLocation: TextView
     lateinit var tvChangeLocation: TextView
+    lateinit var tvNowTemp2: TextView
+    lateinit var tvRainPercent2: TextView
+    lateinit var tvRainPercent3: TextView
+    lateinit var tvTodayClothes: TextView
+    lateinit var tvAccessories: TextView
+    lateinit var pbLoading: ProgressBar
+    lateinit var llProgress: LinearLayout
 
     private var gpsTracker: GpsTracker? = null
 
@@ -91,6 +98,15 @@ class MainBoardActivity2 : AppCompatActivity() {
         ivMainBg = findViewById(R.id.iv_main_bg)
         tvLocation = findViewById(R.id.tv_location)
         tvChangeLocation = findViewById(R.id.tv_change_location)
+        tvNowTemp2 = findViewById(R.id.tv_now_temp_2)
+        tvRainPercent2 = findViewById(R.id.tv_rain_percent_2)
+        tvRainPercent3 = findViewById(R.id.tv_rain_percent_3)
+        tvTodayClothes = findViewById(R.id.tv_today_clothes)
+        tvAccessories = findViewById(R.id.tv_accessories)
+        pbLoading = findViewById(R.id.pb_loading)
+        llProgress = findViewById(R.id.ll_progress)
+
+        progressBarInit()
 
         glide = Glide.with(this)
 
@@ -105,47 +121,65 @@ class MainBoardActivity2 : AppCompatActivity() {
             startActivity(Intent(this, ChangeLocationActivity::class.java))
         }
 
-        // 위치정보 가져오기
-        getLocation()
 
-        // 날씨 정보 가져오기
-        setWeather(nx, ny)
+        setAllView()
 
     }
 
     override fun onResume() {
         super.onResume()
-//        val database = Room.databaseBuilder(
-//            applicationContext,
-//            LocationDB::class.java,
-//            "location_database"
-//        ).allowMainThreadQueries().build()
 
 
         val intent = intent
         val intentLocation = intent.getStringExtra("SEARCH_LOCATION")
         if (intentLocation != null) {
-            val local = intentLocation.toString().split(" ")
-            Log.e("TAG", "intent " + local.toString())
-            val location = local[2]
-            tvLocation.text = "${local[2]}"
-            readExcel(location)
+            showProgress(true)
+            thread(start = true) {
+                Thread.sleep(1000)
 
-
-//            var locationData = Location(intentLocation, false)
-//
-//            database.locationDAO().insertLocation(locationData)
-//            val db = Room.databaseBuilder(
-//                this,
-//                LocationDB::class.java,
-//                "location_database"
-//            ).build()
-//
-//            CoroutineScope(Dispatchers.IO).launch {
-//                db.locationDAO().insertLocation(locationData)
-//            }
+                runOnUiThread {
+                    showProgress(false)
+                    val local = intentLocation.toString().split(" ")
+                    Log.e("TAG", "intent " + local.toString())
+                    val location = local[2]
+                    tvLocation.text = "${local[2]}"
+                    readExcel(location)
+                }
+            }
         }
 
+
+    }
+
+    fun setAllView() {
+        showProgress(true)
+
+        thread(start = true) {
+            Thread.sleep(1000)
+
+            runOnUiThread {
+                showProgress(false)
+                // 위치정보 가져오기
+                getLocation()
+
+                // 날씨 정보 가져오기
+                setWeather(nx, ny)
+            }
+        }
+    }
+
+    fun progressBarInit() {
+        showProgress(false)
+    }
+
+    fun showProgress(isShow: Boolean) {
+        if (isShow) {
+            pbLoading.visibility = View.VISIBLE
+            llProgress.visibility = View.VISIBLE
+        } else {
+            pbLoading.visibility = View.GONE
+            llProgress.visibility = View.GONE
+        }
     }
 
     private fun getLocation() {
@@ -192,7 +226,7 @@ class MainBoardActivity2 : AppCompatActivity() {
     }
 
     fun readExcel(localName: String?) {
-        Log.e("TAG", "readExcel : localName :: " + localName)
+        Log.e("TAG", "readExcel localName :: " + localName)
         try {
             val inputStream: InputStream = baseContext.resources.assets.open("local_name.xls")
             val wb: Workbook = Workbook.getWorkbook(inputStream)
@@ -361,8 +395,6 @@ class MainBoardActivity2 : AppCompatActivity() {
     // baseTime 설정하기
     private fun getBaseTime(h: String, m: String): String {
         var result = ""
-        Log.e("TAG", "hour :: " + h)
-        Log.e("TAG", "mimute :: " + m)
 
         when (h) {
             in "00".."02" -> result = "2000"    // 00~02
@@ -384,27 +416,6 @@ class MainBoardActivity2 : AppCompatActivity() {
         val timeH = SimpleDateFormat("HH", Locale.getDefault()).format(cal.time) // 현재 시각
 
         when (timeH.toInt()) {
-            in 0..5 -> {
-                Log.e("TAG", "Night")
-                setTheme(R.style.skyTypeTheme)
-                when (sky) {
-                    "1" -> { // 맑음
-                        glide.load(resourceToUri(this, R.drawable.clear_sky_night)).centerCrop()
-                            .into(ivMainBg)
-                        nowSky = "1"
-                    }
-                    "3" -> { // 구름
-                        glide.load(resourceToUri(this, R.drawable.cloud_night)).centerCrop()
-                            .into(ivMainBg)
-                        nowSky = "3"
-                    }
-                    else -> { // 흐림
-                        glide.load(resourceToUri(this, R.drawable.dark_cloud_night)).centerCrop()
-                            .into(ivMainBg)
-                        nowSky = "4"
-                    }
-                }
-            }
             in 6..18 -> {
                 Log.e("TAG", "Morning and DayTime")
                 when (sky) {
@@ -412,11 +423,27 @@ class MainBoardActivity2 : AppCompatActivity() {
                         glide.load(resourceToUri(this, R.drawable.clear_sky)).centerCrop()
                             .into(ivMainBg)
                         nowSky = "1"
+                        tvLocation.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvNowTemp.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvRainPercent.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvNowTemp2.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvRainPercent2.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvRainPercent3.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvTodayClothes.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvAccessories.setTextColor(ContextCompat.getColor(this, R.color.black))
                     }
                     "3" -> { // 구름
                         glide.load(resourceToUri(this, R.drawable.cloud)).centerCrop()
                             .into(ivMainBg)
                         nowSky = "3"
+                        tvLocation.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvNowTemp.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvRainPercent.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvNowTemp2.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvRainPercent2.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvRainPercent3.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvTodayClothes.setTextColor(ContextCompat.getColor(this, R.color.black))
+                        tvAccessories.setTextColor(ContextCompat.getColor(this, R.color.black))
                     }
                     else -> { // 흐림
                         glide.load(resourceToUri(this, R.drawable.dark_cloud)).centerCrop()
@@ -426,8 +453,7 @@ class MainBoardActivity2 : AppCompatActivity() {
                 }
             }
             else -> {
-                Log.e("TAG", "Evening")
-                setTheme(R.style.skyTypeTheme)
+                Log.e("TAG", "Evening or Night")
                 when (sky) {
                     "1" -> { // 맑음
                         glide.load(resourceToUri(this, R.drawable.clear_sky_night)).centerCrop()

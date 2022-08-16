@@ -78,8 +78,6 @@ class IntroActivity : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences("USER_INFO", Context.MODE_PRIVATE)
         val token = sharedPreferences.getString("TOKEN", "empty")
 
-        Log.e("TAG", "tokeen?? " + token)
-
         when (token) {
             "empty" -> {
                 val vpIntro = findViewById<ViewPager2>(R.id.vp_intro)
