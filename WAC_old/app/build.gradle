@@ -7,8 +7,8 @@ plugins {
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdk 32
-
+    compileSdk 31
+    namespace 'com.ioad.wac'
     defaultConfig {
         applicationId "com.ioad.wac"
         minSdk 21
