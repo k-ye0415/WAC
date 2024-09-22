@@ -14,6 +14,7 @@
         tools:visibility="gone" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutCurrentWeather"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="20dp"
@@ -62,5 +63,22 @@
             app:layout_constraintTop_toBottomOf="@id/tvWeatherDescription"
             tools:text="서울시 서초구 방배동" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvHourlyWeather"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="20dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/layoutCurrentWeather"
+        tools:listitem="@layout/item_hourly_weather" />
+
+    <Button
+        android:id="@+id/btnRefresh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="새로고침" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

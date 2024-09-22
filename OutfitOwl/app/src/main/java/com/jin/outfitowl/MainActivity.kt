@@ -3,21 +3,29 @@ package com.jin.outfitowl
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Address
-import android.location.Geocoder
 import android.location.LocationListener
 import android.location.LocationManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.jin.outfitowl.adapter.HourWeatherAdapter
+import com.jin.outfitowl.data.WeatherData
 import com.jin.outfitowl.databinding.ActivityMainBinding
 import com.loopj.android.http.AsyncHttpClient
 import com.loopj.android.http.JsonHttpResponseHandler
 import com.loopj.android.http.RequestParams
+import cz.msebera.android.httpclient.Header
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.ArrayList
+import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -26,10 +34,8 @@ class MainActivity : AppCompatActivity() {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
-    val apiKey = "f3e6195afa7c7409b5a884619d0f94c8"
-    val url =
-        "https://api.openweathermap.org/data/2.5/weather?"
-
+    val apiKey = "056af9cbd5ca37ebf555e67cdb7e8346"
+    val url = "https://api.openweathermap.org/data/3.0/onecall?"
     val MIN_TIME: Long = 5000
     val MIN_DISTANCE: Float = 1000F
     val WEATHER_REQUEST: Int = 102
@@ -44,6 +50,14 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         Log.d(TAG, "oncreate")
         getWeatherInCurrentLocation()
+        binding.btnRefresh.setOnClickListener {
+            getWeatherInCurrentLocation()
+        }
+
+        binding.rvHourlyWeather.apply {
+            layoutManager =
+                LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
+        }
     }
 
 
@@ -55,43 +69,46 @@ class MainActivity : AppCompatActivity() {
             val params: RequestParams = RequestParams()
             params.put("lat", location.latitude)
             params.put("lon", location.longitude)
+            params.put("lang", "kr")
+            params.put("exclude", "minutely,alerts")
             params.put("appid", apiKey)
             doNetworking(params)
             // Geocoder를 사용하여 위도, 경도를 주소로 변환
-            val geocoder = Geocoder(this, Locale.getDefault())
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    geocoder.getFromLocation(
-                        location.latitude,
-                        location.longitude,
-                        1
-                    ) { addressList ->
-                        if (addressList != null && addressList.isNotEmpty()) {
-                            Log.e(TAG, "anjwl? $addressList")
-                            address =
-                                "${addressList[0].adminArea} ${if (addressList[0].thoroughfare != "null") addressList[0].thoroughfare else ""}"
-                            Log.i(
-                                TAG,
-                                "City: ${addressList[0].adminArea}, ${addressList[0].thoroughfare}"
-                            )
-                        } else {
-                            Log.i(TAG, "No city found for this location.")
-                        }
-                    }
-                } else {
-                    val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-                    if (addresses != null && addresses.isNotEmpty()) {
-                        address =
-                            "${addresses[0].adminArea} ${if (addresses[0].thoroughfare != "null") addresses[0].thoroughfare else ""}"
-                        Log.i(
-                            TAG,
-                            "City: $address"
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+//            val geocoder = Geocoder(this, Locale.getDefault())
+//            try {
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//                    geocoder.getFromLocation(
+//                        location.latitude,
+//                        location.longitude,
+//                        1
+//                    ) { addressList ->
+//                        if (addressList != null && addressList.isNotEmpty()) {
+//                            Log.e(TAG, "anjwl? $addressList")
+//                            address =
+//                                "${addressList[0].adminArea} ${if (addressList[0].thoroughfare != "null") addressList[0].thoroughfare else ""}"
+//                            Log.i(
+//                                TAG,
+//                                "City: ${addressList[0].adminArea}, ${addressList[0].thoroughfare}"
+//                            )
+//                        } else {
+//                            Log.i(TAG, "No city found for this location.")
+//                        }
+//                    }
+//                } else {
+//                    val addresses =
+//                        geocoder.getFromLocation(location.latitude, location.longitude, 1)
+//                    if (addresses != null && addresses.isNotEmpty()) {
+//                        address =
+//                            "${addresses[0].adminArea} ${if (addresses[0].thoroughfare != "null") addresses[0].thoroughfare else ""}"
+//                        Log.i(
+//                            TAG,
+//                            "City: $address"
+//                        )
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//            }
         }
 
 
@@ -127,7 +144,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun doNetworking(params: RequestParams) {
-        Log.d(TAG, "doNetworking $url")
+        Log.d(TAG, "doNetworking $url, $params")
         AsyncHttpClient().get(url, params, object : JsonHttpResponseHandler() {
             override fun onSuccess(
                 statusCode: Int,
@@ -136,20 +153,15 @@ class MainActivity : AppCompatActivity() {
             ) {
                 super.onSuccess(statusCode, headers, response)
                 Log.d(TAG, "onSuccess response : $response")
+                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+//                val formattedDate = sdf.format(date)
                 if (response != null) {
-                    val weatherId =
-                        response.getJSONArray("weather").getJSONObject(0)?.getInt("id") ?: 0
-                    val weatherType =
-                        response.getJSONArray("weather").getJSONObject(0).getString("main")
-                    val icon = response.getJSONArray("weather").getJSONObject(0).getString("icon")
-                    val weatherDescription = updateWeatherIcon(weatherId)
-                    val roundedTemp: Int =
-                        (response.getJSONObject("main").getDouble("temp") - 273.15).toInt()
-                    Log.d(
-                        TAG,
-                        "weatherId : $weatherId, weatherType : $weatherType, weatherIcon : $icon, roundedTemp : $roundedTemp"
-                    )
-                    binding.tvTemp.text = "$roundedTemp\u2103"
+                    val currentWeather = response.getJSONObject("current")
+                    val currentTemp: Int = (currentWeather.getDouble("temp") - 273.15).toInt()
+                    val weather = currentWeather.getJSONArray("weather").getJSONObject(0)
+                    val weatherDescription = weather.getString("description")
+                    val icon = weather.getString("icon")
+                    binding.tvTemp.text = "$currentTemp\u2103"
                     binding.tvWeatherDescription.text = weatherDescription
                     binding.tvAddress.text = address
                     Glide
@@ -168,28 +180,48 @@ class MainActivity : AppCompatActivity() {
                         .centerCrop()
 //                        .placeholder(R.drawable.loading_spinner)
                         .into(binding.ivWeatherIcon);
-//                    코드 500의 경우 - 가벼운 비 아이콘 = "10d". 아래 코드의 전체 목록을 참조하십시오
-//                    URL은 https://openweathermap.org/img/wn/10d@2x.png입니다.
+
+                    val hourlyJsonList = response.getJSONArray("hourly")
+                    val hourlyList = ArrayList<WeatherData>()
+                    for (i in 0 until hourlyJsonList.length()) {
+                        val hourly = hourlyJsonList.getJSONObject(i)
+                        val hourlyDate = hourly.getLong("dt")
+                        val dateTime = Instant.ofEpochSecond(hourlyDate)
+                        val today = LocalDate.now(ZoneId.systemDefault())
+                        val hourlyLocalDate = dateTime.atZone(ZoneId.systemDefault()).toLocalDate()
+                        val formatter = if (today.isEqual(hourlyLocalDate)) {
+                            DateTimeFormatter.ofPattern("HH")
+                        } else {
+                            DateTimeFormatter.ofPattern("MM-dd HH")
+                        }
+                        val formattedDate = dateTime.atZone(ZoneId.systemDefault()).format(formatter)
+                        val temp: Int = (hourly.getDouble("temp") - 273.15).toInt()
+                        val weather = hourly.getJSONArray("weather").getJSONObject(0)
+                        val weatherDescription = weather.getString("description")
+                        val icon = weather.getString("icon")
+                        hourlyList.add(
+                            WeatherData(
+                                "$temp\u2103",
+                                weatherDescription,
+                                icon,
+                                formattedDate
+                            )
+                        )
+                    }
+
+                    binding.rvHourlyWeather.adapter = HourWeatherAdapter(hourlyList, this@MainActivity)
                 }
             }
-        })
-    }
 
-    private fun updateWeatherIcon(condition: Int): String {
-        return when (condition) {
-            in 200..299 -> "뇌우"  // thunderstorm
-            in 300..499 -> "이슬비"  // lightrain
-            in 500..599 -> "비"  // rain
-            in 600..700 -> "눈"  // snow
-            in 701..771 -> "안개"  // fog
-            in 772..799 -> "흐림"  // overcast
-            800 -> "맑음"  // clear
-            in 801..804 -> "구름"  // cloudy
-            in 900..902 -> "뇌우"  // thunderstorm
-            903 -> "눈"  // snow
-            904 -> "맑음"  // clear
-            in 905..1000 -> "뇌우"  // thunderstorm
-            else -> "알 수 없음"  // dunno
-        }
+            override fun onFailure(
+                statusCode: Int,
+                headers: Array<out Header>?,
+                throwable: Throwable?,
+                errorResponse: JSONObject?
+            ) {
+                super.onFailure(statusCode, headers, throwable, errorResponse)
+                Log.e(TAG, "statusCode $statusCode, errorResponse : $errorResponse")
+            }
+        })
     }
 }
