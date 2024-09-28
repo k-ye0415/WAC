@@ -5,11 +5,117 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".activity.MainActivity">
 
     <include
         android:id="@+id/layoutIntro"
         layout="@layout/include_intro"
+        android:visibility="gone"
         tools:visibility="gone" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutCurrentWeather"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="20dp"
+        android:background="@drawable/bg_main_temp"
+        android:padding="10dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/ivWeatherIcon"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginLeft="10dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@color/cardview_dark_background" />
+
+        <TextView
+            android:id="@+id/tvTemp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:textSize="30dp"
+            app:layout_constraintLeft_toRightOf="@id/ivWeatherIcon"
+            app:layout_constraintTop_toTopOf="@id/ivWeatherIcon"
+            tools:text="23&#8451;" />
+
+        <TextView
+            android:id="@+id/tvWeatherDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="4dp"
+            app:layout_constraintBottom_toBottomOf="@+id/tvTemp"
+            app:layout_constraintLeft_toRightOf="@id/tvTemp"
+            tools:text="맑음" />
+
+        <TextView
+            android:id="@+id/tvAverageTemp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/tvAverageDescription"
+            app:layout_constraintLeft_toLeftOf="@id/tvTemp"
+            app:layout_constraintTop_toBottomOf="@id/tvTemp"
+            tools:text="최저온도" />
+
+        <TextView
+            android:id="@+id/tvAverageDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="@id/tvTemp"
+            app:layout_constraintTop_toBottomOf="@id/tvAverageTemp"
+            tools:text="대체로 맑음" />
+
+        <TextView
+            android:id="@+id/tvAddress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="12dp"
+            app:layout_constraintLeft_toLeftOf="@id/ivWeatherIcon"
+            app:layout_constraintTop_toBottomOf="@id/ivWeatherIcon"
+            tools:text="서울특별시" />
+
+        <ImageView
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:layout_marginLeft="3dp"
+            android:src="@drawable/ic_location"
+            app:layout_constraintBottom_toBottomOf="@id/tvAddress"
+            app:layout_constraintLeft_toRightOf="@id/tvAddress"
+            app:layout_constraintTop_toTopOf="@id/tvAddress" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvHourlyWeather"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="20dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/layoutCurrentWeather"
+        tools:listitem="@layout/item_hourly_weather" />
+
+    <ImageView
+        android:id="@+id/ivTest"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@mipmap/ic_launcher_round" />
+
+    <Button
+        android:id="@+id/btnRefresh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="새로고침"
+        android:visibility="gone" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
