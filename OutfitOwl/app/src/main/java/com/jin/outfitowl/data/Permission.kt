@@ -51,14 +51,10 @@ enum class Permission(val number: Int) {
         }
 
         fun checkPermission(activity: Activity, permission: String): Boolean {
-            if (ContextCompat.checkSelfPermission(
-                    activity,
-                    permission
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                return false
-            }
-            return true
+            return ContextCompat.checkSelfPermission(
+                activity,
+                permission
+            ) == PackageManager.PERMISSION_GRANTED
         }
     }
 }

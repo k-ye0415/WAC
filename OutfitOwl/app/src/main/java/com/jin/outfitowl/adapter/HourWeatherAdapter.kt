@@ -22,24 +22,24 @@ class HourWeatherAdapter(private val hourlyList: List<WeatherData>, val context:
 
     override fun onBindViewHolder(holder: HourWeatherAdapter.ViewHolder, position: Int) {
         val hourly = hourlyList.get(position)
-        holder.binding.tvHour.text = hourly.weatherTime
+        holder.binding.tvHour.text = hourly.time
         Glide
             .with(context)
             .load(
-                if (hourly.weatherIcon.contains("01")) {
-                    if (hourly.weatherIcon == "01d") {
+                if (hourly.icon.contains("01")) {
+                    if (hourly.icon == "01d") {
                         R.drawable.ic_clear_day
                     } else {
                         R.drawable.ic_clear_night
                     }
                 } else {
-                    "https://openweathermap.org/img/wn/${hourly.weatherIcon}@2x.png"
+                    "https://openweathermap.org/img/wn/${hourly.icon}@2x.png"
                 }
             )
             .centerCrop()
 //                        .placeholder(R.drawable.loading_spinner)
             .into(holder.binding.ivWeatherIcon)
-        holder.binding.tvTemp.text = hourly.weatherTemp
+        holder.binding.tvTemp.text = hourly.temp
     }
 
     override fun getItemCount(): Int {

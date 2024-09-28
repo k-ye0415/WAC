@@ -6,15 +6,10 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.jin.outfitowl.R
 import com.jin.outfitowl.data.Permission
 import com.jin.outfitowl.databinding.ActivitySplashBinding
-import com.jin.outfitowl.manager.LocationManager
 
 class SplashActivity : AppCompatActivity() {
     val binding: ActivitySplashBinding by lazy {
@@ -23,14 +18,6 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(binding.root)
-//        enableEdgeToEdge()
-//        setContentView(R.layout.activity_splash)
-//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-//            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-//            insets
-//        }
         checkPermission()
     }
 
@@ -61,7 +48,6 @@ class SplashActivity : AppCompatActivity() {
                 binding.progress.visibility = View.GONE
                 val intent = Intent(this@SplashActivity, MainActivity::class.java)
                 startActivity(intent)
-//                LocationManager.getCurrentLocation(this@SplashActivity)
             } else {
                 Log.e("TAG", "allow permission")
             }
