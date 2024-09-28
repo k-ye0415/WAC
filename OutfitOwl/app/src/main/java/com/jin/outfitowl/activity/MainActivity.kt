@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
                     super.onSuccess(statusCode, headers, response)
                     if (response != null) {
                         val currentWeather =
-                            WeatherData.convertCurrentWeather(response.getJSONObject("current"))
+                            OpenWeatherManager.convertCurrentWeather(response.getJSONObject("current"))
                         binding.tvTemp.text = currentWeather.temp
                         binding.tvWeatherDescription.text = currentWeather.description
                         binding.tvAddress.text =
@@ -91,9 +91,13 @@ class MainActivity : AppCompatActivity() {
                             .into(binding.ivWeatherIcon);
 
                         val hourlyList =
-                            WeatherData.convertHourlyWeatherList(response.getJSONArray("hourly"))
+                            OpenWeatherManager.convertHourlyWeatherList(response.getJSONArray("hourly"))
                         binding.rvHourlyWeather.adapter =
                             HourWeatherAdapter(hourlyList, this@MainActivity)
+                        val averageWeather =
+                            OpenWeatherManager.convertDailyWeatherList(response.getJSONArray("daily"))
+                        binding.tvAverageDescription.text = averageWeather.summary
+                        binding.tvAverageTemp.text = averageWeather.averageTemp
                     }
                 }
 
