@@ -98,24 +98,16 @@
         android:layout_marginTop="10dp"
         android:layout_marginRight="20dp"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@id/layoutCurrentWeather"
-        tools:listitem="@layout/item_hourly_weather" />
+        app:layout_constraintTop_toBottomOf="@id/layoutCurrentWeather" />
 
-    <ImageView
-        android:id="@+id/ivTest"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:src="@mipmap/ic_launcher_round" />
-
-    <Button
-        android:id="@+id/btnRefresh"
-        android:layout_width="wrap_content"
+    <include
+        android:id="@+id/layoutClothes"
+        layout="@layout/include_clothes"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="새로고침"
-        android:visibility="gone" />
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="20dp"
+        app:layout_constraintTop_toBottomOf="@id/rvHourlyWeather" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

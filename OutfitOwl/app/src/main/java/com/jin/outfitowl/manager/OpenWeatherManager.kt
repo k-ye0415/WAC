@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.jin.outfitowl.data.CurrentWeather
 import com.jin.outfitowl.data.WeatherData
+import com.jin.outfitowl.util.TAG
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.Instant
@@ -35,7 +36,7 @@ object OpenWeatherManager {
                     if (addressList != null && addressList.isNotEmpty()) {
                         address = addressList[0].adminArea
                     } else {
-                        Log.i("TAG", "No city found for this location.")
+                        Log.i(TAG.LOCATION.label, "No city found for this location.")
                     }
                 }
             } else {

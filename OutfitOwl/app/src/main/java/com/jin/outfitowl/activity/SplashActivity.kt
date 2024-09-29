@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.jin.outfitowl.data.Permission
 import com.jin.outfitowl.databinding.ActivitySplashBinding
+import com.jin.outfitowl.util.TAG
 
 class SplashActivity : AppCompatActivity() {
     val binding: ActivitySplashBinding by lazy {
@@ -32,8 +33,8 @@ class SplashActivity : AppCompatActivity() {
             return
         }
         binding.progress.visibility = View.GONE
-        val intent = Intent(this@SplashActivity, MainActivity::class.java)
-        startActivity(intent)
+//        val intent = Intent(this@SplashActivity, MainActivity::class.java)
+//        startActivity(intent)
     }
 
     override fun onRequestPermissionsResult(
@@ -46,13 +47,13 @@ class SplashActivity : AppCompatActivity() {
             val allPermissionGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
             if (allPermissionGranted) {
                 binding.progress.visibility = View.GONE
-                val intent = Intent(this@SplashActivity, MainActivity::class.java)
-                startActivity(intent)
+//                val intent = Intent(this@SplashActivity, MainActivity::class.java)
+//                startActivity(intent)
             } else {
-                Log.e("TAG", "allow permission")
+                Log.e(TAG.PERMISSION.label, "allow permission")
             }
         } else {
-            Log.e("TAG", "allow permission")
+            Log.e(TAG.PERMISSION.label, "allow permission")
         }
     }
 }

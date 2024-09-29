@@ -6,6 +6,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,6 +18,7 @@ import com.jin.outfitowl.databinding.ActivityMainBinding
 import com.jin.outfitowl.manager.OpenWeatherManager
 import com.jin.outfitowl.manager.OpenWeatherManager.API_KEY
 import com.jin.outfitowl.manager.OpenWeatherManager.API_URL
+import com.jin.outfitowl.viewModel.ViewModel
 import com.loopj.android.http.AsyncHttpClient
 import com.loopj.android.http.JsonHttpResponseHandler
 import cz.msebera.android.httpclient.Header
@@ -27,14 +29,13 @@ class MainActivity : AppCompatActivity() {
     val binding: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
-    val TAG = "yejin"
+    private val viewModel: ViewModel by viewModels()
 
     private lateinit var locationManager: LocationManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        Log.d(TAG, "oncreate")
         binding.rvHourlyWeather.apply {
             layoutManager =
                 LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
@@ -69,6 +70,7 @@ class MainActivity : AppCompatActivity() {
                 ) {
                     super.onSuccess(statusCode, headers, response)
                     if (response != null) {
+                        viewModel.insertWeatherData(lat, long, response.toString())
                         val currentWeather =
                             OpenWeatherManager.convertCurrentWeather(response.getJSONObject("current"))
                         binding.tvTemp.text = currentWeather.temp
@@ -108,7 +110,7 @@ class MainActivity : AppCompatActivity() {
                     errorResponse: JSONObject?
                 ) {
                     super.onFailure(statusCode, headers, throwable, errorResponse)
-                    Log.e(TAG, "[$statusCode] $errorResponse")
+                    Log.e(com.jin.outfitowl.util.TAG.LOCATION.label, "[$statusCode] $errorResponse")
                 }
             })
     }
