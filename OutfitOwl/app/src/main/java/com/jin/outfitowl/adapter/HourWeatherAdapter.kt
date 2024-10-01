@@ -39,7 +39,7 @@ class HourWeatherAdapter(private val hourlyList: List<WeatherData>, val context:
             .centerCrop()
 //                        .placeholder(R.drawable.loading_spinner)
             .into(holder.binding.ivWeatherIcon)
-        holder.binding.tvTemp.text = hourly.temp
+        holder.binding.tvTemp.text = "${hourly.temp}℃"
     }
 
     override fun getItemCount(): Int {

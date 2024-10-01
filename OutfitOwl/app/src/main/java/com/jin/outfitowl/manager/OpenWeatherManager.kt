@@ -5,7 +5,7 @@ import android.location.Geocoder
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.jin.outfitowl.data.CurrentWeather
+import com.jin.outfitowl.data.AverageWeather
 import com.jin.outfitowl.data.WeatherData
 import com.jin.outfitowl.util.TAG
 import org.json.JSONArray
@@ -54,7 +54,7 @@ object OpenWeatherManager {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun convertCurrentWeather(obj: JSONObject): WeatherData {
-        val currentTemp = "${(obj.getDouble("temp") - 273.15).toInt()}\u2103"
+        val currentTemp = (obj.getDouble("temp") - 273.15).toInt()
         val weather = obj.getJSONArray("weather").getJSONObject(0)
         val weatherDescription = weather.getString("description")
         val icon = weather.getString("icon")
@@ -78,7 +78,7 @@ object OpenWeatherManager {
         return if (obj != null) {
             val date = obj.getLong("dt")
             val time = convertDate(date)
-            val temp = "${(obj.getDouble("temp") - 273.15).toInt()}\u2103"
+            val temp = (obj.getDouble("temp") - 273.15).toInt()
             val weather = obj.getJSONArray("weather").getJSONObject(0)
             val weatherDescription = weather.getString("description")
             val icon = weather.getString("icon")
@@ -102,7 +102,7 @@ object OpenWeatherManager {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun convertDailyWeatherList(objList: JSONArray): CurrentWeather {
+    fun convertDailyWeatherList(objList: JSONArray): AverageWeather {
         for (i in 0 until objList.length()) {
             val daily = objList.getJSONObject(i)
             val dailyDate = daily.getLong("dt")
@@ -112,12 +112,43 @@ object OpenWeatherManager {
             if (today.isEqual(localDate)) {
                 val summary = daily.getString("summary")
                 val temp = daily.getJSONObject("temp")
-                val min = "${(temp.getDouble("min") - 273.15).toInt()}℃"
-                val max = "${(temp.getDouble("max") - 273.15).toInt()}℃"
-                val average = "최저 온도 : $min / 최고 온도 : $max"
-                return CurrentWeather(summary, average)
+                val min = (temp.getDouble("min") - 273.15).toInt()
+                val max = (temp.getDouble("max") - 273.15).toInt()
+                val average = "최저 온도 : $min℃ / 최고 온도 : $max℃"
+                return AverageWeather(summary, min, max, average)
             }
         }
-        return CurrentWeather()
+        return AverageWeather()
+    }
+
+    fun convertWeeklyWeatherList(objList: JSONArray): List<AverageWeather> {
+        val weeklyList = ArrayList<AverageWeather>()
+        for (i in 0 until objList.length()) {
+            val weekly = objList.getJSONObject(i)
+            val date = weekly.getLong("dt")
+            val dateTime = Instant.ofEpochSecond(date)
+            val today = LocalDate.now(ZoneId.systemDefault())
+            val localDate = dateTime.atZone(ZoneId.systemDefault()).toLocalDate()
+            if (today.isBefore(localDate)) {
+                val temp = weekly.getJSONObject("temp")
+                val min = (temp.getDouble("min") - 273.15).toInt()
+                val max = (temp.getDouble("max") - 273.15).toInt()
+                val average = "최저 온도 : $min℃ / 최고 온도 : $max℃"
+                val weather = weekly.getJSONArray("weather").getJSONObject(0)
+                val description = weather.getString("description")
+                val icon = weather.getString("icon")
+                weeklyList.add(
+                    AverageWeather(
+                        minTemp = min,
+                        maxTemp = max,
+                        averageTemp = average,
+                        description = description,
+                        icon = icon
+                    )
+                )
+            }
+        }
+
+        return weeklyList
     }
 }

@@ -33,8 +33,8 @@ class SplashActivity : AppCompatActivity() {
             return
         }
         binding.progress.visibility = View.GONE
-//        val intent = Intent(this@SplashActivity, MainActivity::class.java)
-//        startActivity(intent)
+        val intent = Intent(this@SplashActivity, MainActivity::class.java)
+        startActivity(intent)
     }
 
     override fun onRequestPermissionsResult(
@@ -47,8 +47,8 @@ class SplashActivity : AppCompatActivity() {
             val allPermissionGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
             if (allPermissionGranted) {
                 binding.progress.visibility = View.GONE
-//                val intent = Intent(this@SplashActivity, MainActivity::class.java)
-//                startActivity(intent)
+                val intent = Intent(this@SplashActivity, MainActivity::class.java)
+                startActivity(intent)
             } else {
                 Log.e(TAG.PERMISSION.label, "allow permission")
             }

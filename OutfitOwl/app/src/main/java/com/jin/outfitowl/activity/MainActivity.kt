@@ -11,13 +11,19 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.google.firebase.Firebase
+import com.google.firebase.storage.storage
 import com.jin.outfitowl.R
+import com.jin.outfitowl.adapter.AverageClothesAdapter
 import com.jin.outfitowl.adapter.HourWeatherAdapter
-import com.jin.outfitowl.data.WeatherData
+import com.jin.outfitowl.adapter.WeeklyWeatherAdapter
+import com.jin.outfitowl.data.AverageWeather
+import com.jin.outfitowl.data.ClothesTemp
 import com.jin.outfitowl.databinding.ActivityMainBinding
 import com.jin.outfitowl.manager.OpenWeatherManager
 import com.jin.outfitowl.manager.OpenWeatherManager.API_KEY
 import com.jin.outfitowl.manager.OpenWeatherManager.API_URL
+import com.jin.outfitowl.util.TAG
 import com.jin.outfitowl.viewModel.ViewModel
 import com.loopj.android.http.AsyncHttpClient
 import com.loopj.android.http.JsonHttpResponseHandler
@@ -32,10 +38,12 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: ViewModel by viewModels()
 
     private lateinit var locationManager: LocationManager
+    private val storageRef = Firebase.storage.reference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+
         binding.rvHourlyWeather.apply {
             layoutManager =
                 LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
@@ -73,7 +81,8 @@ class MainActivity : AppCompatActivity() {
                         viewModel.insertWeatherData(lat, long, response.toString())
                         val currentWeather =
                             OpenWeatherManager.convertCurrentWeather(response.getJSONObject("current"))
-                        binding.tvTemp.text = currentWeather.temp
+                        binding.tvTemp.text = "${currentWeather.temp}℃"
+                        getCurrentClothes(currentWeather.temp)
                         binding.tvWeatherDescription.text = currentWeather.description
                         binding.tvAddress.text =
                             OpenWeatherManager.getAddress(this@MainActivity, lat, long)
@@ -100,6 +109,14 @@ class MainActivity : AppCompatActivity() {
                             OpenWeatherManager.convertDailyWeatherList(response.getJSONArray("daily"))
                         binding.tvAverageDescription.text = averageWeather.summary
                         binding.tvAverageTemp.text = averageWeather.averageTemp
+                        getAverageClothes((averageWeather.minTemp + averageWeather.maxTemp) / 2)
+                        setWeeklyList(
+                            OpenWeatherManager.convertWeeklyWeatherList(
+                                response.getJSONArray(
+                                    "daily"
+                                )
+                            )
+                        )
                     }
                 }
 
@@ -113,5 +130,57 @@ class MainActivity : AppCompatActivity() {
                     Log.e(com.jin.outfitowl.util.TAG.LOCATION.label, "[$statusCode] $errorResponse")
                 }
             })
+    }
+
+    fun getCurrentClothes(temp: Int) {
+        Log.d(TAG.TEST.label, "temp : $temp")
+        val clothesTemp = ClothesTemp.findByClothesTemp(temp)
+        Log.d(TAG.TEST.label, "clothesTemp : ${clothesTemp.valueName}")
+        val forestRef = storageRef.child("images/$clothesTemp/")
+        forestRef.listAll().addOnSuccessListener { metadata ->
+            for (item in metadata.items) {
+                item.downloadUrl.addOnSuccessListener { item ->
+                    Log.i(TAG.TEST.label, "metadata.path : ${item}")
+
+                    Glide
+                        .with(this@MainActivity)
+                        .load(item)
+                        .centerCrop()
+                        .into(binding.layoutClothes.ivCurrentClothes);
+
+                }
+
+            }
+        }
+    }
+
+    fun getAverageClothes(temp: Int) {
+        val clothesTemp = ClothesTemp.findByClothesTemp(temp)
+        val clothsList = ArrayList<String>()
+        Log.d(TAG.TEST.label, "clothesTemp : ${clothesTemp.valueName}")
+        val forestRef = storageRef.child("images/$clothesTemp/")
+        forestRef.listAll().addOnSuccessListener { metadata ->
+            for (item in metadata.items) {
+                item.downloadUrl.addOnSuccessListener { item ->
+                    Log.i(TAG.TEST.label, "metadata.path : ${item}")
+                    // list add
+                    clothsList.add(item.toString())
+                }
+
+            }
+            binding.layoutClothes.rvClothes.apply {
+                layoutManager =
+                    LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
+                adapter = AverageClothesAdapter(clothsList, this@MainActivity)
+            }
+        }
+    }
+
+    fun setWeeklyList(weeklyList: List<AverageWeather>) {
+        binding.rvWeekly.apply {
+            layoutManager =
+                LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL, false)
+            adapter = WeeklyWeatherAdapter(weeklyList, this@MainActivity)
+        }
     }
 }
