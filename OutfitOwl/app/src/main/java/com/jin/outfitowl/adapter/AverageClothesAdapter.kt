@@ -20,13 +20,21 @@ class AverageClothesAdapter(private val clothesList: List<String>, val context: 
     }
 
     override fun onBindViewHolder(holder: AverageClothesAdapter.ViewHolder, position: Int) {
-        val clothes = clothesList[position]
-        Glide.with(context).load(clothes).into(holder.binding.ivClothes)
+        when (holder) {
+            is ViewHolderInterface -> holder.bind()
+        }
     }
 
     override fun getItemCount(): Int {
         return clothesList.size
     }
 
-    class ViewHolder(val binding: ItemClothesBinding) : RecyclerView.ViewHolder(binding.root)
+    inner class ViewHolder(val binding: ItemClothesBinding) : RecyclerView.ViewHolder(binding.root),
+        ViewHolderInterface {
+        override fun bind() {
+            val clothes = clothesList[adapterPosition]
+            Glide.with(context).load(clothes).into(binding.ivClothes)
+        }
+
+    }
 }

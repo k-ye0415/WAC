@@ -19,11 +19,8 @@ import java.util.Date
 import java.util.Locale
 
 object OpenWeatherManager {
-    val API_KEY = "056af9cbd5ca37ebf555e67cdb7e8346"
     val API_URL = "https://api.openweathermap.org/data/3.0/onecall?"
 
-    //    val API_URL = "https://api.openweathermap.org/data/3.0/onecall?lat=33.44&lon=-94.04&exclude=minutely,alerts&appid=$API_KEY"
-//    https://api.openweathermap.org/data/3.0/onecall?lat=33.44&lon=-94.04&exclude=hourly,daily&appid={API key}
 
     fun getAddress(context: Context, lat: Double, long: Double): String {
         var address = ""
@@ -104,61 +101,65 @@ object OpenWeatherManager {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun convertDailyWeatherList(objList: JSONArray): AverageWeather {
+    fun covertCurrentWeatherAverage(objList: JSONArray): AverageWeather {
+        val today = LocalDate.now(ZoneId.systemDefault())
         for (i in 0 until objList.length()) {
             val daily = objList.getJSONObject(i)
-            val dailyDate = daily.getLong("dt")
-            val dateTime = Instant.ofEpochSecond(dailyDate)
-            val today = LocalDate.now(ZoneId.systemDefault())
-            val localDate = dateTime.atZone(ZoneId.systemDefault()).toLocalDate()
+            val weatherDetails = getWeatherDetails(daily)
+            val localDate = weatherDetails.localDate
             if (today.isEqual(localDate)) {
-                val summary = daily.getString("summary")
-                val temp = daily.getJSONObject("temp")
-                val min = (temp.getDouble("min") - 273.15).toInt()
-                val max = (temp.getDouble("max") - 273.15).toInt()
-                val average = "최저 온도 : $min℃ / 최고 온도 : $max℃"
-                return AverageWeather(
-                    summary = summary,
-                    minTemp = min,
-                    maxTemp = max,
-                    averageTemp = average
-                )
+                return weatherDetails
             }
         }
         return AverageWeather()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun convertWeeklyWeatherList(objList: JSONArray): List<AverageWeather> {
         val weeklyList = ArrayList<AverageWeather>()
+        val today = LocalDate.now(ZoneId.systemDefault())
+
         for (i in 0 until objList.length()) {
             val weekly = objList.getJSONObject(i)
-            val dateLong = weekly.getLong("dt")
-            val date = Date(dateLong * 1000)
-            val format = SimpleDateFormat("EEE", Locale.getDefault())
-            val dateTime = Instant.ofEpochSecond(dateLong)
-            val today = LocalDate.now(ZoneId.systemDefault())
-            val localDate = dateTime.atZone(ZoneId.systemDefault()).toLocalDate()
-            if (!today.equals(localDate)) {
-                val temp = weekly.getJSONObject("temp")
-                val min = (temp.getDouble("min") - 273.15).toInt()
-                val max = (temp.getDouble("max") - 273.15).toInt()
-                val average = "최저 온도 : $min℃ / 최고 온도 : $max℃"
-                val weather = weekly.getJSONArray("weather").getJSONObject(0)
-                val description = weather.getString("description")
-                val icon = weather.getString("icon")
-                weeklyList.add(
-                    AverageWeather(
-                        day = format.format(date),
-                        minTemp = min,
-                        maxTemp = max,
-                        averageTemp = average,
-                        description = description,
-                        icon = icon
-                    )
-                )
+            val weatherDetails = getWeatherDetails(weekly)
+            if (!today.isEqual(weatherDetails.localDate)) {
+                weeklyList.add(weatherDetails)
             }
         }
-
         return weeklyList
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getWeatherDetails(jsonObject: JSONObject): AverageWeather {
+        val timestamp = jsonObject.getLong("dt")
+        val localDate = Instant.ofEpochSecond(timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
+
+        // 온도 정보 추출 및 섭씨로 변환
+        val temp = jsonObject.getJSONObject("temp")
+        val min = (temp.getDouble("min") - 273.15).toInt()
+        val max = (temp.getDouble("max") - 273.15).toInt()
+        val averageTemp = "최저 온도 : $min℃ / 최고 온도 : $max℃"
+
+        // 날씨 정보 추출
+        val weather = jsonObject.getJSONArray("weather").getJSONObject(0)
+        val description = weather.getString("description")
+        val icon = weather.getString("icon")
+
+        // 요일 이름 추출
+        val date = Date(timestamp * 1000)
+        val format = SimpleDateFormat("EEE", Locale.getDefault())
+        val day = format.format(date)
+
+        return AverageWeather(
+            day = day,
+            summary = jsonObject.optString("summary", ""),
+            minTemp = min,
+            maxTemp = max,
+            averageTemp = averageTemp,
+            description = description,
+            icon = icon,
+            localDate = localDate
+        )
+    }
+
 }
