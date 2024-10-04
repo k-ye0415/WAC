@@ -21,33 +21,37 @@ class HourWeatherAdapter(private val hourlyList: List<WeatherData>, val context:
     }
 
     override fun onBindViewHolder(holder: HourWeatherAdapter.ViewHolder, position: Int) {
-        val hourly = hourlyList.get(position)
-        holder.binding.tvHour.text = hourly.time
-        Glide
-            .with(context)
-            .load(
-                if (hourly.icon.contains("01")) {
-                    if (hourly.icon == "01d") {
-                        R.drawable.ic_clear_day
-                    } else {
-                        R.drawable.ic_clear_night
-                    }
-                } else {
-                    "https://openweathermap.org/img/wn/${hourly.icon}@2x.png"
-                }
-            )
-            .centerCrop()
-//                        .placeholder(R.drawable.loading_spinner)
-            .into(holder.binding.ivWeatherIcon)
-        holder.binding.tvTemp.text = hourly.temp
+        when (holder) {
+            is ViewHolderInterface -> holder.bind()
+        }
     }
 
     override fun getItemCount(): Int {
         return hourlyList.size
     }
 
-    class ViewHolder(val binding: ItemHourlyWeatherBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+    inner class ViewHolder(val binding: ItemHourlyWeatherBinding) :
+        RecyclerView.ViewHolder(binding.root), ViewHolderInterface {
+        override fun bind() {
+            val hourly = hourlyList[adapterPosition]
+            binding.tvHour.text = hourly.time
+            Glide
+                .with(context)
+                .load(
+                    if (hourly.icon.contains("01")) {
+                        if (hourly.icon == "01d") {
+                            R.drawable.ic_clear_day
+                        } else {
+                            R.drawable.ic_clear_night
+                        }
+                    } else {
+                        "https://openweathermap.org/img/wn/${hourly.icon}@2x.png"
+                    }
+                )
+                .centerCrop()
+                .into(binding.ivWeatherIcon)
+            binding.tvTemp.text = "${hourly.temp}℃"
+        }
 
     }
 }

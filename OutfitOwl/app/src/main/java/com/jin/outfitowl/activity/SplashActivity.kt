@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.jin.outfitowl.data.Permission
 import com.jin.outfitowl.databinding.ActivitySplashBinding
+import com.jin.outfitowl.util.TAG
 
 class SplashActivity : AppCompatActivity() {
     val binding: ActivitySplashBinding by lazy {
@@ -49,10 +50,10 @@ class SplashActivity : AppCompatActivity() {
                 val intent = Intent(this@SplashActivity, MainActivity::class.java)
                 startActivity(intent)
             } else {
-                Log.e("TAG", "allow permission")
+                Log.e(TAG.PERMISSION.label, "allow permission")
             }
         } else {
-            Log.e("TAG", "allow permission")
+            Log.e(TAG.PERMISSION.label, "allow permission")
         }
     }
 }

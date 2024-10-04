@@ -197,4 +197,7 @@ fabric.properties
 
 !/gradle/wrapper/gradle-wrapper.jar
 
+# Private
+app/src/main/java/com/jin/outfitowl/data/Configuration.kt
+
 # End of https://www.toptal.com/developers/gitignore/api/android,androidstudio,kotlin,java
