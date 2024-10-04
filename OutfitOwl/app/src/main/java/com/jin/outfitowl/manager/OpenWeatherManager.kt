@@ -10,10 +10,12 @@ import com.jin.outfitowl.data.WeatherData
 import com.jin.outfitowl.util.TAG
 import org.json.JSONArray
 import org.json.JSONObject
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Date
 import java.util.Locale
 
 object OpenWeatherManager {
@@ -115,7 +117,12 @@ object OpenWeatherManager {
                 val min = (temp.getDouble("min") - 273.15).toInt()
                 val max = (temp.getDouble("max") - 273.15).toInt()
                 val average = "최저 온도 : $min℃ / 최고 온도 : $max℃"
-                return AverageWeather(summary, min, max, average)
+                return AverageWeather(
+                    summary = summary,
+                    minTemp = min,
+                    maxTemp = max,
+                    averageTemp = average
+                )
             }
         }
         return AverageWeather()
@@ -125,11 +132,13 @@ object OpenWeatherManager {
         val weeklyList = ArrayList<AverageWeather>()
         for (i in 0 until objList.length()) {
             val weekly = objList.getJSONObject(i)
-            val date = weekly.getLong("dt")
-            val dateTime = Instant.ofEpochSecond(date)
+            val dateLong = weekly.getLong("dt")
+            val date = Date(dateLong * 1000)
+            val format = SimpleDateFormat("EEE", Locale.getDefault())
+            val dateTime = Instant.ofEpochSecond(dateLong)
             val today = LocalDate.now(ZoneId.systemDefault())
             val localDate = dateTime.atZone(ZoneId.systemDefault()).toLocalDate()
-            if (today.isBefore(localDate)) {
+            if (!today.equals(localDate)) {
                 val temp = weekly.getJSONObject("temp")
                 val min = (temp.getDouble("min") - 273.15).toInt()
                 val max = (temp.getDouble("max") - 273.15).toInt()
@@ -139,6 +148,7 @@ object OpenWeatherManager {
                 val icon = weather.getString("icon")
                 weeklyList.add(
                     AverageWeather(
+                        day = format.format(date),
                         minTemp = min,
                         maxTemp = max,
                         averageTemp = average,

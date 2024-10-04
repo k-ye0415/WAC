@@ -33,7 +33,7 @@ class WeeklyWeatherAdapter(private val weeklyList: List<AverageWeather>, val con
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val weekly = weeklyList[position]
-
+        holder.binding.tvDay.text = weekly.day
         // 날씨 아이콘 설정
         val icon = if (weekly.icon.contains("01")) {
             if (weekly.icon == "01d") R.drawable.ic_clear_day else R.drawable.ic_clear_night
